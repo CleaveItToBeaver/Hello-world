@@ -1,13 +1,31 @@
 import random
+from colorama import Fore, Style
+
+class armor:
+    DR = 0
+    description = "Naked as the day you were born. You savage."
+    weight = 1
+    value = 5
+
+cloth = armor
+cloth.desc = "Commoner's clothes. Woolen tunic, tattered robes, what-have-you."
+cloth.weight = .5
+cloth.value = 2
+cloth.DR = 1
 
 class player:
     name = "Player"
+    equippedArmor = "None"
+    armorDesc = ""
+    armorWgt = 0
+    armorDR = 0
     ST = 10
     DX = 10
     IQ = 10
     HT = 10
     maxHP = ST
     tempHP = maxHP
+    parry = 3 + (DX/2)
 
 class baseNPC:
     name = "mook"
@@ -17,6 +35,16 @@ class baseNPC:
     HT = 10
     maxHP = ST
     tempHP = maxHP
+    parry = 3 + (DX/2)
+
+def equipArmor(char, armor):
+    char.armorDesc = armor.desc
+    char.armorWgt = armor.weight
+    char.armorDR = armor.DR
+    char.equippedArmor = armor.name
+
+def unequipArmor(char)
+    char.armorDesc = 
 
 def roll(skill):
     y = 0
@@ -34,23 +62,24 @@ def roll(skill):
     print(attString)
     print("Total = ", y)
     if y > skill:
-        print("Test failed.")
+        print(Fore.RED + "Test failed.")
         result = 1
     elif y == 4:
-        print("Automatic Success!")
-        result = 2
-    elif y == 3:
-        print("Critical Success!")
+        print(Fore.GREEN + "Automatic Success!")
         result = 3
+    elif y == 3:
+        print(Fore.GREEN + "Critical Success!")
+        result = 4
     elif y == 17:
-        print("Automatic Failure")
+        print(Fore.RED + "Automatic Failure")
         result = 1
     elif y == 18:
-        print("Critical Failure!")
+        print(Fore.RED + "Critical Failure!")
         result = 0
     else:
-        print("Success!")
+        print(Fore.GREEN + "Success!")
         result = 2
+    print(Style.RESET_ALL)
     return result
 
 def rollDmg(dice, modifier):
@@ -72,17 +101,26 @@ def rollDmg(dice, modifier):
     
 def attack(skill, target):
     result = roll(skill)
+    defence = 0
     dmg = 0
     if result == 2:
-        dmg = rollDmg(1,-2)
-    elif result == 3:
-        dmg = 4
-        print("Total Damage = ", dmg)
-    elif result == 1:
-        print("Whiff! No damage dealt.")
-    elif result == 0:
-        print("""Eventually, we'll have a crit fail chart for this.
-        For now, you just suck.""")
+        print(f"{target.name} attempts to defend!")
+        defence = roll(target.parry)
+        if defence > 1:
+            dmg = 0
+            print(f"{target.name} fended off the attack!")
+        else: dmg = rollDmg(1,-2)
+    else:
+        if result == 3:
+            dmg = rollDmg(1,-2)
+        elif result == 4:
+            dmg = 4
+            print("Total Damage = ", dmg)
+        elif result == 1:
+            print("Whiff! No damage dealt.")
+        elif result == 0:
+            print("""Eventually, we'll have a crit fail chart for this.
+            For now, you just suck.""")
     target.tempHP -= dmg
     print(f"{target.name} has {target.tempHP} HP remaining.")
 
