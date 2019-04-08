@@ -22,11 +22,16 @@ def roll(skill):
     y = 0
     i = 0
     result = ""
+    attString = ""
     for i in range(3):
         x = random.randrange(1,7)
-        print(x)
+        if i == 0:
+            attString += str(x)
+        else:
+            attString += ", " + str(x)
         y += x
         continue
+    print(attString)
     print("Total = ", y)
     if y > skill:
         print("Test failed.")
@@ -80,3 +85,33 @@ def attack(skill, target):
         For now, you just suck.""")
     target.tempHP -= dmg
     print(f"{target.name} has {target.tempHP} HP remaining.")
+
+def gamestart():
+    player.name = input("What is your name? ")
+    print("""A drunken thug staggers from the shadows, shouting explitives.
+        Swaying, he raises his fists, and you do the same.""")
+    foe = baseNPC
+    gameloop(foe)
+
+def gameloop(enemy):
+    turn = 1
+    while player.tempHP > 0 and enemy.tempHP > 0:
+        if turn%2 == 1:
+            if turn == 1:
+                fight = input("Attack? (Y/N)")
+            else:
+                fight = input("Continue attacking? (Y/N) ")
+            if fight == "Y" or fight == "y":
+                attack(player.DX, enemy)
+            else:
+                print("You get away safely! (You coward.)")
+                break
+        else:
+            attack(enemy.DX, player)
+        if player.tempHP < 1:
+            print("You collapse in the mud, beaten and ashamed.")
+        elif enemy.tempHP < 1:
+            print("Your foe crumples in a heap, and you stand victorious.")
+        else:
+            turn += 1
+            print(f"Turn #{turn}")
