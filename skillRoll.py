@@ -6,6 +6,7 @@ class armor:
     description = "Naked as the day you were born. You savage."
     weight = 1
     value = 5
+    name = "Naked"
 
 cloth = armor()
 cloth.name = "Rags"
@@ -15,6 +16,7 @@ cloth.value = 2
 cloth.DR = 1
 
 noArmor = armor()
+noArmor.name = "lack of"
 noArmor.desc = "Naked as the day you were born. You savage."
 noArmor.weight = 0
 noArmor.value = 0
@@ -135,32 +137,41 @@ def attack(skill, target):
         elif result == 0:
             print("""Eventually, we'll have a crit fail chart for this.
             For now, you just suck.""")
-    target.tempHP -= dmg
+    if dmg - target.armorDR < 1:
+        dmg = 0
+        print(f"The attack fails to penetrate {target.name}'s {target.equippedArmor} armor!")
+    else:
+        dmg -= target.armorDR
+        print(f"{target.name}'s {target.equippedArmor} armor soaks {target.armorDR} points of damage!")
+        target.tempHP -= dmg
     print(f"{target.name} has {target.tempHP} HP remaining.")
 
 def gamestart():
-    player.name = input("What is your name? ")
+    PC = player()
+    PC.name = input("What is your name? ")
     print("""A drunken thug staggers from the shadows, shouting explitives.
         Swaying, he raises his fists, and you do the same.""")
     foe = baseNPC()
-    gameloop(foe)
+    equipArmor(PC, cloth)
+    unequipArmor(foe)
+    gameloop(PC, foe)
 
-def gameloop(enemy):
+def gameloop(PC, enemy):
     turn = 1
-    while player.tempHP > 0 and enemy.tempHP > 0:
+    while PC.tempHP > 0 and enemy.tempHP > 0:
         if turn%2 == 1:
             if turn == 1:
                 fight = input("Attack? (Y/N)")
             else:
                 fight = input("Continue attacking? (Y/N) ")
             if fight == "Y" or fight == "y":
-                attack(player.DX, enemy)
+                attack(PC.DX, enemy)
             else:
                 print("You get away safely! (You coward.)")
                 break
         else:
-            attack(enemy.DX, player)
-        if player.tempHP < 1:
+            attack(enemy.DX, PC)
+        if PC.tempHP < 1:
             print("You collapse in the mud, beaten and ashamed.")
         elif enemy.tempHP < 1:
             print("Your foe crumples in a heap, and you stand victorious.")
