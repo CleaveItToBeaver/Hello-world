@@ -7,11 +7,18 @@ class armor:
     weight = 1
     value = 5
 
-cloth = armor
+cloth = armor()
+cloth.name = "Rags"
 cloth.desc = "Commoner's clothes. Woolen tunic, tattered robes, what-have-you."
 cloth.weight = .5
 cloth.value = 2
 cloth.DR = 1
+
+noArmor = armor()
+noArmor.desc = "Naked as the day you were born. You savage."
+noArmor.weight = 0
+noArmor.value = 0
+noArmor.DR = 0
 
 class player:
     name = "Player"
@@ -28,7 +35,11 @@ class player:
     parry = 3 + (DX/2)
 
 class baseNPC:
-    name = "mook"
+    name = "Mook"
+    equippedArmor = "None"
+    armorDesc = ""
+    armorWgt = 0
+    armorDR = 0
     ST = 10
     DX = 10
     IQ = 10
@@ -43,8 +54,11 @@ def equipArmor(char, armor):
     char.armorDR = armor.DR
     char.equippedArmor = armor.name
 
-def unequipArmor(char)
-    char.armorDesc = 
+def unequipArmor(char):
+    char.armorDesc = noArmor.desc
+    char.armorWgt = noArmor.weight
+    char.armorDR = noArmor.DR
+    char.equippedArmor = noArmor.name
 
 def roll(skill):
     y = 0
@@ -128,7 +142,7 @@ def gamestart():
     player.name = input("What is your name? ")
     print("""A drunken thug staggers from the shadows, shouting explitives.
         Swaying, he raises his fists, and you do the same.""")
-    foe = baseNPC
+    foe = baseNPC()
     gameloop(foe)
 
 def gameloop(enemy):
