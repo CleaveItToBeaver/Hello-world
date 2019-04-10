@@ -4,16 +4,30 @@ from colorama import Fore, Style
 class armor:
     DR = 0
     description = "Naked as the day you were born. You savage."
-    weight = 1
-    value = 5
-    name = "Naked"
+    weight = 0
+    value = 0
+    name = "lack of"
+    ID = "Naked"
+
+class mWep:
+    TL = 0
+    name = "Melee Weapon"
+    dmgSrc = "sw"
+    dmgMod = +2
+    cost = 50
+    weight = 4
+    ST = 11
+    skill = "Axe/Mace"
+    default = "DX-5"
+    reach = 1
 
 cloth = armor()
-cloth.name = "Rags"
+cloth.name = "Cloth"
 cloth.desc = "Commoner's clothes. Woolen tunic, tattered robes, what-have-you."
-cloth.weight = .5
-cloth.value = 2
+cloth.weight = 12
+cloth.value = 150
 cloth.DR = 1
+cloth.ID = "Cloth"
 
 noArmor = armor()
 noArmor.name = "lack of"
@@ -21,8 +35,33 @@ noArmor.desc = "Naked as the day you were born. You savage."
 noArmor.weight = 0
 noArmor.value = 0
 noArmor.DR = 0
+noArmor.ID = "Naked"
 
-class player:
+club = mWep()
+club.TL = 0
+club.name = "Club"
+club.dmgSrc = "Sw"
+club.dmgMod = +2
+club.cost = 50
+club.weight = 4
+club.ST = 11
+club.skill = "Axe/Mace"
+club.default = "DX", -5
+club.reach = 1
+
+unarmed = mWep()
+unarmed.TL = 0
+unarmed.name = "Bare Hands"
+unarmed.dmgSrc = "Thr"
+unarmed.dmgMod = 0
+unarmed.cost = 0
+unarmed.weight = 0
+unarmed.ST = 0
+unarmed.skill = "Brawl"
+unarmed.default = "DX", 0
+unarmed.reach = 0
+
+class baseHuman:
     name = "Player"
     equippedArmor = "None"
     armorDesc = ""
@@ -32,23 +71,12 @@ class player:
     DX = 10
     IQ = 10
     HT = 10
+    speed = (HT+DX)/4
     maxHP = ST
     tempHP = maxHP
     parry = 3 + (DX/2)
-
-class baseNPC:
-    name = "Mook"
-    equippedArmor = "None"
-    armorDesc = ""
-    armorWgt = 0
-    armorDR = 0
-    ST = 10
-    DX = 10
-    IQ = 10
-    HT = 10
-    maxHP = ST
-    tempHP = maxHP
-    parry = 3 + (DX/2)
+    dmgThr = 1, -2
+    dmgSw = 1, 0
 
 def equipArmor(char, armor):
     char.armorDesc = armor.desc
@@ -115,7 +143,7 @@ def rollDmg(dice, modifier):
     return total
 
     
-def attack(skill, target):
+def attack(char, skill, target):
     result = roll(skill)
     defence = 0
     dmg = 0
@@ -125,10 +153,10 @@ def attack(skill, target):
         if defence > 1:
             dmg = 0
             print(f"{target.name} fended off the attack!")
-        else: dmg = rollDmg(1,-2)
+        else: dmg = rollDmg(char.dmgThr[0],char.dmgThr[1])
     else:
         if result == 3:
-            dmg = rollDmg(1,-2)
+            dmg = rollDmg(char.dmgThr[0],char.dmgThr[1])
         elif result == 4:
             dmg = 4
             print("Total Damage = ", dmg)
@@ -137,44 +165,49 @@ def attack(skill, target):
         elif result == 0:
             print("""Eventually, we'll have a crit fail chart for this.
             For now, you just suck.""")
-    if dmg - target.armorDR < 1:
+    if dmg - target.armorDR < 1 and dmg != 0:
         dmg = 0
         print(f"The attack fails to penetrate {target.name}'s {target.equippedArmor} armor!")
+    elif dmg == 0:
+        pass    
     else:
         dmg -= target.armorDR
         print(f"{target.name}'s {target.equippedArmor} armor soaks {target.armorDR} points of damage!")
         target.tempHP -= dmg
     print(f"{target.name} has {target.tempHP} HP remaining.")
 
-def gamestart():
-    PC = player()
+def start():
+    PC = baseHuman()
     PC.name = input("What is your name? ")
     print("""A drunken thug staggers from the shadows, shouting explitives.
         Swaying, he raises his fists, and you do the same.""")
-    foe = baseNPC()
+    foe = baseHuman()
+    foe.name = "Faceless thug"
     equipArmor(PC, cloth)
-    unequipArmor(foe)
+    equipArmor(foe, noArmor)
     gameloop(PC, foe)
 
 def gameloop(PC, enemy):
     turn = 1
     while PC.tempHP > 0 and enemy.tempHP > 0:
+        print(f"Turn #{turn}")
         if turn%2 == 1:
             if turn == 1:
                 fight = input("Attack? (Y/N)")
             else:
                 fight = input("Continue attacking? (Y/N) ")
             if fight == "Y" or fight == "y":
-                attack(PC.DX, enemy)
+                attack(PC, PC.DX, enemy)
             else:
                 print("You get away safely! (You coward.)")
                 break
         else:
-            attack(enemy.DX, PC)
+            attack(enemy, enemy.DX, PC)
         if PC.tempHP < 1:
             print("You collapse in the mud, beaten and ashamed.")
         elif enemy.tempHP < 1:
             print("Your foe crumples in a heap, and you stand victorious.")
         else:
             turn += 1
-            print(f"Turn #{turn}")
+test = baseHuman()
+#start()
