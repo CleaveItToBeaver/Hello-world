@@ -63,7 +63,8 @@ unarmed.reach = 0
 
 class baseHuman:
     name = "Player"
-    equippedArmor = "None"
+    equippedArmor = noArmor
+    equippedWeapon = unarmed
     armorDesc = ""
     armorWgt = 0
     armorDR = 0
@@ -75,20 +76,8 @@ class baseHuman:
     maxHP = ST
     tempHP = maxHP
     parry = 3 + (DX/2)
-    dmgThr = 1, -2
-    dmgSw = 1, 0
-
-def equipArmor(char, armor):
-    char.armorDesc = armor.desc
-    char.armorWgt = armor.weight
-    char.armorDR = armor.DR
-    char.equippedArmor = armor.name
-
-def unequipArmor(char):
-    char.armorDesc = noArmor.desc
-    char.armorWgt = noArmor.weight
-    char.armorDR = noArmor.DR
-    char.equippedArmor = noArmor.name
+    Thr = 1, -2
+    Sw = 1, 0
 
 def roll(skill):
     y = 0
@@ -147,32 +136,36 @@ def attack(char, skill, target):
     result = roll(skill)
     defence = 0
     dmg = 0
+    dice = getattr(char, char.equippedWeapon.dmgSrc)
     if result == 2:
         print(f"{target.name} attempts to defend!")
         defence = roll(target.parry)
         if defence > 1:
             dmg = 0
             print(f"{target.name} fended off the attack!")
-        else: dmg = rollDmg(char.dmgThr[0],char.dmgThr[1])
+        else:
+            dmg = rollDmg(dice[0], dice[1]+club.dmgMod)
+            print(f"{char.name}'s {char.equippedWeapon.name} deals {dmg} damage!")
     else:
         if result == 3:
-            dmg = rollDmg(char.dmgThr[0],char.dmgThr[1])
+            dmg = rollDmg(dice[0], dice[1]+club.dmgMod)
+            print(f"{char.name}'s {char.equippedWeapon.name} deals {dmg} damage!")
         elif result == 4:
             dmg = 4
-            print("Total Damage = ", dmg)
+            print(f"{char.name}'s {char.equippedWeapon.name} deals {dmg} damage!")
         elif result == 1:
             print("Whiff! No damage dealt.")
         elif result == 0:
             print("""Eventually, we'll have a crit fail chart for this.
             For now, you just suck.""")
-    if dmg - target.armorDR < 1 and dmg != 0:
+    if dmg - target.equippedArmor.DR < 1 and dmg != 0:
         dmg = 0
-        print(f"The attack fails to penetrate {target.name}'s {target.equippedArmor} armor!")
+        print(f"The attack fails to penetrate {target.name}'s {target.equippedArmor.DR} armor!")
     elif dmg == 0:
         pass    
     else:
-        dmg -= target.armorDR
-        print(f"{target.name}'s {target.equippedArmor} armor soaks {target.armorDR} points of damage!")
+        dmg -= target.equippedArmor.DR
+        print(f"{target.name}'s {target.equippedArmor.name} armor soaks {target.equippedArmor.DR} points of damage!")
         target.tempHP -= dmg
     print(f"{target.name} has {target.tempHP} HP remaining.")
 
@@ -183,8 +176,9 @@ def start():
         Swaying, he raises his fists, and you do the same.""")
     foe = baseHuman()
     foe.name = "Faceless thug"
-    equipArmor(PC, cloth)
-    equipArmor(foe, noArmor)
+    PC.equippedWeapon = club
+    PC.equippedArmor = cloth
+
     gameloop(PC, foe)
 
 def gameloop(PC, enemy):
@@ -209,5 +203,8 @@ def gameloop(PC, enemy):
             print("Your foe crumples in a heap, and you stand victorious.")
         else:
             turn += 1
+            
 test = baseHuman()
+test.equippedArmor = cloth
+test.equippedWeapon = club
 #start()
