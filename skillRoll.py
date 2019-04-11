@@ -1,4 +1,5 @@
 import random
+import json
 from colorama import Fore, Style
 
 class armor:
@@ -116,10 +117,23 @@ class baseHuman(object):
     Thr = 1, -2
     Sw = 1, 0
 
-def loadArmorList():
+def equipArmor(target, ID):
     armorL = {}
     with open('armor.txt') as infile:
-	armorL = json.load(infile)
+        armorL = json.load(infile)
+
+    for x in armorL['armor']:
+        if x["ID"] == str(ID):
+            print(x)
+            ID = armor()
+            ID.name = x["name"]
+            ID.desc = x["desc"]
+            ID.weight = x["weight"]
+            ID.value = x["value"]
+            ID.DR = x["DR"]
+            ID.ID = x["ID"]                
+            target.equippedArmor = ID
+        else: pass
 
 	
 
