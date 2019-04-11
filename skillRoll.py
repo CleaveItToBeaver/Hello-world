@@ -18,8 +18,10 @@ class mWep:
     weight = 4
     ST = 11
     skill = "Axe/Mace"
-    default = "DX-5"
+    default = "DX"
+    defaultMod = -5
     reach = 1
+    handed = 1
 
 cloth = armor()
 cloth.name = "Cloth"
@@ -46,8 +48,10 @@ club.cost = 50
 club.weight = 4
 club.ST = 11
 club.skill = "Axe/Mace"
-club.default = "DX", -5
+club.default = "DX"
+club.defaultMod = -5
 club.reach = 1
+club.handed = 1
 
 unarmed = mWep()
 unarmed.TL = 0
@@ -58,26 +62,66 @@ unarmed.cost = 0
 unarmed.weight = 0
 unarmed.ST = 0
 unarmed.skill = "Brawl"
-unarmed.default = "DX", 0
+unarmed.default = "DX"
+unarmed.defaultMod = 0
 unarmed.reach = 0
+unarmed.handed = 1
 
-class baseHuman:
+class baseHuman(object):
     name = "Player"
     equippedArmor = noArmor
     equippedWeapon = unarmed
-    armorDesc = ""
-    armorWgt = 0
-    armorDR = 0
-    ST = 10
+    ST = 10    
     DX = 10
     IQ = 10
     HT = 10
-    speed = (HT+DX)/4
-    maxHP = ST
-    tempHP = maxHP
-    parry = 3 + (DX/2)
+    tempHP = ST
+
+    def __init__(self, DX = 10, HT = 10, IQ = 10, ST = 10):
+        print("Init running")
+        self.speed = (DX + HT)/4
+        self.maxHP = ST
+        self.tempHP = self.maxHP
+        self.parry = 3 + (DX/2)
+        
+    @property
+    def speed(self):
+        print("Getter running")
+        self._speed = (self.DX + self.HT)/4
+        return(self._speed)
+
+    @speed.setter
+    def speed(self, value):
+        print("Setter running")
+        self._speed = (self.DX + self.HT) / 4
+
+    @property
+    def maxHP(self):
+        self._maxHP = self.ST
+        return(self._maxHP)
+
+    @maxHP.setter
+    def maxHP(self, value):
+        self._maxHP = self.ST
+
+    @property
+    def parry(self):
+        self._parry = 3 + (self.DX/2)
+        return(self._parry)
+
+    @parry.setter
+    def parry(self, value):
+        self._parry = 3 + (self.DX/2)
+
     Thr = 1, -2
     Sw = 1, 0
+
+def loadArmorList():
+    armorL = {}
+    with open('armor.txt') as infile:
+	armorL = json.load(infile)
+
+	
 
 def roll(skill):
     y = 0
