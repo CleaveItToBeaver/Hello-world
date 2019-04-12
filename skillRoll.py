@@ -125,7 +125,7 @@ def equipArmor(target, ID):
 
     for x in armorL['armor']:
         if x["ID"] == str(ID):
-            print(x)
+            #print(x)
             ID = armor()
             ID.name = x["name"]
             ID.desc = x["desc"]
@@ -136,6 +136,31 @@ def equipArmor(target, ID):
             target.equippedArmor = ID
         else: pass
 
+def equipWeapon(target, ID):
+    weaponL = {}
+    with open('weapons.txt') as infile:
+        weaponL = json.load(infile)
+
+    for x in weaponL['weapons']:
+        if x["ID"] == str(ID):
+            print(x)
+            ID = mWep()
+            ID.name = x["name"]
+            ID.TL = x["TL"]
+            ID.dmgSrc = x["dmgSrc"]
+            ID.dmgMod = x["dmgMod"]
+            ID.dmgType = x["dmgType"]
+            ID.cost = x["cost"]
+            ID.weight = x["weight"]
+            ID.ST = x["ST"]
+            ID.skill = x["skill"]
+            ID.default = x["default"]
+            ID.defaultMod = x["defaultMod"]
+            ID.reach = x["reach"]
+            ID.handed = x["handed"]
+            ID.ID = x["ID"]
+            target.equippedWeapon = ID
+        else: pass
 	
 
 def roll(skill):
@@ -203,11 +228,11 @@ def attack(char, skill, target):
             dmg = 0
             print(f"{target.name} fended off the attack!")
         else:
-            dmg = rollDmg(dice[0], dice[1]+club.dmgMod)
+            dmg = rollDmg(dice[0], dice[1]+char.equippedWeapon.dmgMod)
             print(f"{char.name}'s {char.equippedWeapon.name} deals {dmg} damage!")
     else:
         if result == 3:
-            dmg = rollDmg(dice[0], dice[1]+club.dmgMod)
+            dmg = rollDmg(dice[0], dice[1]+char.equippedWeapon.dmgMod)
             print(f"{char.name}'s {char.equippedWeapon.name} deals {dmg} damage!")
         elif result == 4:
             dmg = 4
@@ -219,25 +244,38 @@ def attack(char, skill, target):
             For now, you just suck.""")
     if dmg - target.equippedArmor.DR < 1 and dmg != 0:
         dmg = 0
-        print(f"The attack fails to penetrate {target.name}'s {target.equippedArmor.DR} armor!")
+        print(f"The attack fails to penetrate {target.name}'s ({target.equippedArmor.DR} DR) {target.equippedArmor.name} armor!")
     elif dmg == 0:
         pass    
     else:
         dmg -= target.equippedArmor.DR
         print(f"{target.name}'s {target.equippedArmor.name} armor soaks {target.equippedArmor.DR} points of damage!")
+        if char.equippedWeapon.dmgType == "pi-":
+            dmg -= int(dmg/2)
+            if dmg == 0: dmg = 1
+            print(f"The small piercing weapon deals half damage after DR... ({dmg})")
+        elif char.equippedWeapon.dmgType == "cut" or char.equippedWeapon.dmgType == "pi+":
+            dmg += int(dmg/2)
+            print(f"Cutting and large piercing attacks deal 50% more damage after DR! ({dmg})")
+        elif char.equippedWeapon.dmgType == "imp":
+            dmg += dmg
+            print(f"Impaling weapons deal double damage after DR! ({dmg})")
+        else:
+            pass
         target.tempHP -= dmg
     print(f"{target.name} has {target.tempHP} HP remaining.")
 
 def start():
     PC = baseHuman()
-    PC.name = input("What is your name? ")
-    print("""A drunken thug staggers from the shadows, shouting explitives.
-        Swaying, he raises his fists, and you do the same.""")
     foe = baseHuman()
     foe.name = "Faceless thug"
-    PC.equippedWeapon = club
-    PC.equippedArmor = cloth
-
+    equipWeapon(PC, "Rapier")
+    equipArmor(PC, "Plate")
+    equipWeapon(foe, "Axe")
+    equipArmor(foe, "Leather")
+    PC.name = input("What is your name? ")
+    print(f"""A drunken thug staggers from the shadows, shouting explitives.
+        Swaying, he raises his {foe.equippedWeapon.name}, and you ready your {PC.equippedWeapon.name}.""")
     gameloop(PC, foe)
 
 def gameloop(PC, enemy):
