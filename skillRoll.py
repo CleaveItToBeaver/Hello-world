@@ -25,14 +25,6 @@ class mWep:
     reach = 1
     handed = 1
 
-cloth = armor()
-cloth.name = "Cloth"
-cloth.desc = "Commoner's clothes. Woolen tunic, tattered robes, what-have-you."
-cloth.weight = 12
-cloth.value = 150
-cloth.DR = 1
-cloth.ID = "Cloth"
-
 noArmor = armor()
 noArmor.name = "lack of"
 noArmor.desc = "Naked as the day you were born. You savage."
@@ -40,20 +32,6 @@ noArmor.weight = 0
 noArmor.value = 0
 noArmor.DR = 0
 noArmor.ID = "Naked"
-
-club = mWep()
-club.TL = 0
-club.name = "Club"
-club.dmgSrc = "Sw"
-club.dmgMod = +2
-club.cost = 50
-club.weight = 4
-club.ST = 11
-club.skill = "Axe/Mace"
-club.default = "DX"
-club.defaultMod = -5
-club.reach = 1
-club.handed = 1
 
 unarmed = mWep()
 unarmed.TL = 0
@@ -77,7 +55,9 @@ class baseHuman(object):
     DX = 10
     IQ = 10
     HT = 10
-    tempHP = ST
+    Thr = [1, -2]
+    Sw = [1, 0]
+    CP = 0
 
     def __init__(self, DX = 10, HT = 10, IQ = 10, ST = 10):
         print("Init running")
@@ -85,6 +65,21 @@ class baseHuman(object):
         self.maxHP = ST
         self.tempHP = self.maxHP
         self.parry = 3 + (DX/2)
+        self.setDmg()
+
+    def setDmg(self):
+        stL = {}
+        with open('stTable.txt') as infile:
+            stL = json.load(infile)
+
+        for x in stL['dmgTable']:
+            if x["ST"] == self.ST:
+                #print(x)
+                self.Thr[0] = x["thrDice"]
+                self.Thr[1] = x["thrMod"]
+                self.Sw[0] = x["swDice"]
+                self.Sw[1] = x["swMod"]
+        infile.close()
         
     @property
     def speed(self):
@@ -115,8 +110,6 @@ class baseHuman(object):
     def parry(self, value):
         self._parry = 3 + (self.DX/2)
 
-    Thr = 1, -2
-    Sw = 1, 0
 
 def equipArmor(target, ID):
     armorL = {}
@@ -135,6 +128,7 @@ def equipArmor(target, ID):
             ID.ID = x["ID"]                
             target.equippedArmor = ID
         else: pass
+    infile.close()
 
 def equipWeapon(target, ID):
     weaponL = {}
@@ -161,7 +155,8 @@ def equipWeapon(target, ID):
             ID.ID = x["ID"]
             target.equippedWeapon = ID
         else: pass
-	
+    infile.close()
+    
 
 def roll(skill):
     y = 0
@@ -302,6 +297,8 @@ def gameloop(PC, enemy):
             turn += 1
             
 test = baseHuman()
-test.equippedArmor = cloth
-test.equippedWeapon = club
+equipArmor(test, "Cloth")
+equipWeapon(test, "poleaxe")
+#test.equippedArmor = cloth
+#test.equippedWeapon = club
 #start()
