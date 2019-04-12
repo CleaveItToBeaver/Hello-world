@@ -15,6 +15,7 @@ class mWep:
     name = "Melee Weapon"
     dmgSrc = "sw"
     dmgMod = +2
+    dmgType = "cut"
     cost = 50
     weight = 4
     ST = 11
