@@ -58,6 +58,7 @@ class baseHuman(object):
     Thr = [1, -2]
     Sw = [1, 0]
     CP = 0
+    SP = 0
 
     def __init__(self, DX = 10, HT = 10, IQ = 10, ST = 10):
         print("Init running")
