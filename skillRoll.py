@@ -1,4 +1,5 @@
 import random
+import json
 from colorama import Fore, Style
 
 class armor:
@@ -14,12 +15,15 @@ class mWep:
     name = "Melee Weapon"
     dmgSrc = "sw"
     dmgMod = +2
+    dmgType = "cut"
     cost = 50
     weight = 4
     ST = 11
     skill = "Axe/Mace"
-    default = "DX-5"
+    default = "DX"
+    defaultMod = -5
     reach = 1
+    handed = 1
 
 cloth = armor()
 cloth.name = "Cloth"
@@ -46,8 +50,10 @@ club.cost = 50
 club.weight = 4
 club.ST = 11
 club.skill = "Axe/Mace"
-club.default = "DX", -5
+club.default = "DX"
+club.defaultMod = -5
 club.reach = 1
+club.handed = 1
 
 unarmed = mWep()
 unarmed.TL = 0
@@ -58,26 +64,104 @@ unarmed.cost = 0
 unarmed.weight = 0
 unarmed.ST = 0
 unarmed.skill = "Brawl"
-unarmed.default = "DX", 0
+unarmed.default = "DX"
+unarmed.defaultMod = 0
 unarmed.reach = 0
+unarmed.handed = 1
 
-class baseHuman:
+class baseHuman(object):
     name = "Player"
     equippedArmor = noArmor
     equippedWeapon = unarmed
-    armorDesc = ""
-    armorWgt = 0
-    armorDR = 0
-    ST = 10
+    ST = 10    
     DX = 10
     IQ = 10
     HT = 10
-    speed = (HT+DX)/4
-    maxHP = ST
-    tempHP = maxHP
-    parry = 3 + (DX/2)
+    tempHP = ST
+
+    def __init__(self, DX = 10, HT = 10, IQ = 10, ST = 10):
+        print("Init running")
+        self.speed = (DX + HT)/4
+        self.maxHP = ST
+        self.tempHP = self.maxHP
+        self.parry = 3 + (DX/2)
+        
+    @property
+    def speed(self):
+        print("Getter running")
+        self._speed = (self.DX + self.HT)/4
+        return(self._speed)
+
+    @speed.setter
+    def speed(self, value):
+        print("Setter running")
+        self._speed = (self.DX + self.HT) / 4
+
+    @property
+    def maxHP(self):
+        self._maxHP = self.ST
+        return(self._maxHP)
+
+    @maxHP.setter
+    def maxHP(self, value):
+        self._maxHP = self.ST
+
+    @property
+    def parry(self):
+        self._parry = 3 + (self.DX/2)
+        return(self._parry)
+
+    @parry.setter
+    def parry(self, value):
+        self._parry = 3 + (self.DX/2)
+
     Thr = 1, -2
     Sw = 1, 0
+
+def equipArmor(target, ID):
+    armorL = {}
+    with open('armor.txt') as infile:
+        armorL = json.load(infile)
+
+    for x in armorL['armor']:
+        if x["ID"] == str(ID):
+            #print(x)
+            ID = armor()
+            ID.name = x["name"]
+            ID.desc = x["desc"]
+            ID.weight = x["weight"]
+            ID.value = x["value"]
+            ID.DR = x["DR"]
+            ID.ID = x["ID"]                
+            target.equippedArmor = ID
+        else: pass
+
+def equipWeapon(target, ID):
+    weaponL = {}
+    with open('weapons.txt') as infile:
+        weaponL = json.load(infile)
+
+    for x in weaponL['weapons']:
+        if x["ID"] == str(ID):
+            print(x)
+            ID = mWep()
+            ID.name = x["name"]
+            ID.TL = x["TL"]
+            ID.dmgSrc = x["dmgSrc"]
+            ID.dmgMod = x["dmgMod"]
+            ID.dmgType = x["dmgType"]
+            ID.cost = x["cost"]
+            ID.weight = x["weight"]
+            ID.ST = x["ST"]
+            ID.skill = x["skill"]
+            ID.default = x["default"]
+            ID.defaultMod = x["defaultMod"]
+            ID.reach = x["reach"]
+            ID.handed = x["handed"]
+            ID.ID = x["ID"]
+            target.equippedWeapon = ID
+        else: pass
+	
 
 def roll(skill):
     y = 0
@@ -144,11 +228,11 @@ def attack(char, skill, target):
             dmg = 0
             print(f"{target.name} fended off the attack!")
         else:
-            dmg = rollDmg(dice[0], dice[1]+club.dmgMod)
+            dmg = rollDmg(dice[0], dice[1]+char.equippedWeapon.dmgMod)
             print(f"{char.name}'s {char.equippedWeapon.name} deals {dmg} damage!")
     else:
         if result == 3:
-            dmg = rollDmg(dice[0], dice[1]+club.dmgMod)
+            dmg = rollDmg(dice[0], dice[1]+char.equippedWeapon.dmgMod)
             print(f"{char.name}'s {char.equippedWeapon.name} deals {dmg} damage!")
         elif result == 4:
             dmg = 4
@@ -160,25 +244,38 @@ def attack(char, skill, target):
             For now, you just suck.""")
     if dmg - target.equippedArmor.DR < 1 and dmg != 0:
         dmg = 0
-        print(f"The attack fails to penetrate {target.name}'s {target.equippedArmor.DR} armor!")
+        print(f"The attack fails to penetrate {target.name}'s ({target.equippedArmor.DR} DR) {target.equippedArmor.name} armor!")
     elif dmg == 0:
         pass    
     else:
         dmg -= target.equippedArmor.DR
         print(f"{target.name}'s {target.equippedArmor.name} armor soaks {target.equippedArmor.DR} points of damage!")
+        if char.equippedWeapon.dmgType == "pi-":
+            dmg -= int(dmg/2)
+            if dmg == 0: dmg = 1
+            print(f"The small piercing weapon deals half damage after DR... ({dmg})")
+        elif char.equippedWeapon.dmgType == "cut" or char.equippedWeapon.dmgType == "pi+":
+            dmg += int(dmg/2)
+            print(f"Cutting and large piercing attacks deal 50% more damage after DR! ({dmg})")
+        elif char.equippedWeapon.dmgType == "imp":
+            dmg += dmg
+            print(f"Impaling weapons deal double damage after DR! ({dmg})")
+        else:
+            pass
         target.tempHP -= dmg
     print(f"{target.name} has {target.tempHP} HP remaining.")
 
 def start():
     PC = baseHuman()
-    PC.name = input("What is your name? ")
-    print("""A drunken thug staggers from the shadows, shouting explitives.
-        Swaying, he raises his fists, and you do the same.""")
     foe = baseHuman()
     foe.name = "Faceless thug"
-    PC.equippedWeapon = club
-    PC.equippedArmor = cloth
-
+    equipWeapon(PC, "Rapier")
+    equipArmor(PC, "Plate")
+    equipWeapon(foe, "Axe")
+    equipArmor(foe, "Leather")
+    PC.name = input("What is your name? ")
+    print(f"""A drunken thug staggers from the shadows, shouting explitives.
+        Swaying, he raises his {foe.equippedWeapon.name}, and you ready your {PC.equippedWeapon.name}.""")
     gameloop(PC, foe)
 
 def gameloop(PC, enemy):
