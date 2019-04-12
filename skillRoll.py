@@ -66,6 +66,7 @@ class baseHuman(object):
         self.tempHP = self.maxHP
         self.parry = 3 + (DX/2)
         self.setDmg()
+        self.move = int(self.speed)
 
     def setDmg(self):
         stL = {}
@@ -109,6 +110,15 @@ class baseHuman(object):
     @parry.setter
     def parry(self, value):
         self._parry = 3 + (self.DX/2)
+
+    @property
+    def move(self):
+        self._move = int(self.speed)
+        return(self._move)
+
+    @move.setter
+    def move(self, value):
+        self._move = int(self.speed)
 
 
 def equipArmor(target, ID):
