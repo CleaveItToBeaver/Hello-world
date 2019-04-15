@@ -59,6 +59,7 @@ class baseHuman():
     Sw = [1, 0]
     CP = 0
     SP = 0
+    shock = 0
 
     def __init__(self, DX = 10, HT = 10, IQ = 10, ST = 10):
         print("Init running")
@@ -223,7 +224,10 @@ def rollDmg(dice, modifier):
 
     
 def attack(char, skill, target):
-    result = roll(skill)
+    mod = skill + char.shock
+    if char.shock > 0:
+        print(f"{char.name} attacks  with {char.shock}!")
+    result = roll(mod)
     defence = 0
     dmg = 0
     dice = getattr(char, char.equippedWeapon.dmgSrc)
@@ -269,7 +273,12 @@ def attack(char, skill, target):
         else:
             pass
         target.tempHP -= dmg
+        if dmg > 4:
+            target.shock = -4
+        else:
+            target.shock = dmg
     print(f"{target.name} has {target.tempHP} HP remaining.")
+    char.shock = 0
 
 def start():
     PC = baseHuman()
