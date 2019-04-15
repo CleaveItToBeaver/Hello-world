@@ -47,7 +47,7 @@ unarmed.defaultMod = 0
 unarmed.reach = 0
 unarmed.handed = 1
 
-class baseHuman(object):
+class baseHuman():
     name = "Player"
     equippedArmor = noArmor
     equippedWeapon = unarmed
@@ -129,7 +129,7 @@ def equipArmor(target, ID):
 
     for x in armorL['armor']:
         if x["ID"] == str(ID):
-            #print(x)
+            print(x)
             ID = armor()
             ID.name = x["name"]
             ID.desc = x["desc"]
@@ -274,15 +274,29 @@ def attack(char, skill, target):
 def start():
     PC = baseHuman()
     foe = baseHuman()
+    victory = 1
     foe.name = "Faceless thug"
-    equipWeapon(PC, "Rapier")
+    equipWeapon(PC, "rapier")
+    print(f"Equipping {PC.name}'s Weapon")
     equipArmor(PC, "Plate")
+    print(f"Equipping {PC.name}'s Armor")
     equipWeapon(foe, "Axe")
+    print(f"Equipping {foe.name}'s Weapon")
     equipArmor(foe, "Leather")
+    print(f"Equipping {foe.name}'s armor")
     PC.name = input("What is your name? ")
     print(f"""A drunken thug staggers from the shadows, shouting explitives.
         Swaying, he raises his {foe.equippedWeapon.name}, and you ready your {PC.equippedWeapon.name}.""")
-    gameloop(PC, foe)
+    while victory == 1:
+        victory = gameloop(PC, foe)
+        if victory == 1:
+            fight = input("Face a new combatant? (Y/N)")
+            if fight == "Y" or fight == "y":
+                foe.tempHP = 10
+                victory = 0
+                gameloop(PC, foe)
+        else:
+            break
 
 def gameloop(PC, enemy):
     turn = 1
@@ -302,8 +316,10 @@ def gameloop(PC, enemy):
             attack(enemy, enemy.DX, PC)
         if PC.tempHP < 1:
             print("You collapse in the mud, beaten and ashamed.")
+            return(0)
         elif enemy.tempHP < 1:
             print("Your foe crumples in a heap, and you stand victorious.")
+            return(1)
         else:
             turn += 1
             
