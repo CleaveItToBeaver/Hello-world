@@ -95,6 +95,7 @@ class baseHuman():
     def speed(self, value):
         print("Setter running")
         self._speed = (self.DX + self.HT) / 4
+        return(self._speed)
 
     @property
     def maxHP(self):
@@ -104,6 +105,7 @@ class baseHuman():
     @maxHP.setter
     def maxHP(self, value):
         self._maxHP = self.ST
+        return(self._maxHP)
 
     @property
     def parry(self):
@@ -113,6 +115,7 @@ class baseHuman():
     @parry.setter
     def parry(self, value):
         self._parry = 3 + (self.DX/2)
+        return(self._parry)
 
     @property
     def move(self):
@@ -122,14 +125,7 @@ class baseHuman():
     @move.setter
     def move(self, value):
         self._move = int(self.speed)
-
-    @property
-    def tempHP(self):
-        self._tempHP = self.maxHP
-
-    @tempHP.setter
-    def tempHP(self, value):
-        self._tempHP = int(self.maxHP)
+        return(self._move)
 
 
 def equipArmor(target, ID):
@@ -289,7 +285,7 @@ def attack(char, skill, target):
             target.shock = 4
         else:
             target.shock = dmg
-    print(Fore.YELLOW + f"{target.name} has {target.tempHP} HP remaining.")
+    print(Fore.YELLOW + f"{target.name} has {target._tempHP} HP remaining.")
     char.shock = 0
     print(Style.RESET_ALL)
 
@@ -361,7 +357,7 @@ def combatloop(PC, enemy):
                 return(0)
         else:
             attack(enemy, enemy.DX, PC)
-        if PC.tempHP < 1:
+        if PC._tempHP < 1:
             print("You collapse in the mud, beaten and ashamed.")
             return(0)
         elif enemy.tempHP < 1:
@@ -462,13 +458,13 @@ SP remaining.\n""")
                 if PC.SP - (heal*10) >= 0:
                     PC.SP -= (heal*10)
                     PC.tempHP += heal
-                    print(Fore.GREEN + f"Restored {heal} HP. You now have {PC.tempHP} HP remaining.")
+                    print(Fore.GREEN + f"Restored {heal} HP. You now have {PC._tempHP} HP remaining.")
                     return(2)
                 else:
                     deficit = abs(PC.SP - (heal*10))
                     print(Fore.RED + "You can't afford that much healing! You need {deficit} more SP.")
                     return(2)
-            elif PC.tempHP == PC._maxHP:
+            elif PC.tempHP == PC.maxHP:
                 tithe = input("""You don't need any healing, but the Church gladly accepts donations.
 Enter an amount to tithe, or go [b]ack.""")
                 if (tithe.isdigit()):
@@ -504,4 +500,4 @@ equipArmor(test, "Cloth")
 equipWeapon(test, "poleaxe")
 #test.equippedArmor = cloth
 #test.equippedWeapon = club
-start()
+#start()
