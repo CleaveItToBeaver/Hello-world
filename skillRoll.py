@@ -183,6 +183,7 @@ def roll(skill):
             attString += ", " + str(x)
         y += x
         continue
+    print(f"Rolling against a skill of {skill}")
     print(attString)
     print("Total = ", y)
     if y > skill:
@@ -224,9 +225,9 @@ def rollDmg(dice, modifier):
 
     
 def attack(char, skill, target):
-    mod = skill + char.shock
+    mod = skill - char.shock
     if char.shock > 0:
-        print(f"{char.name} attacks  with {char.shock}!")
+        print(f"{char.name} attacks with -{char.shock} shock!")
     result = roll(mod)
     defence = 0
     dmg = 0
@@ -274,7 +275,7 @@ def attack(char, skill, target):
             pass
         target.tempHP -= dmg
         if dmg > 4:
-            target.shock = -4
+            target.shock = 4
         else:
             target.shock = dmg
     print(f"{target.name} has {target.tempHP} HP remaining.")
@@ -297,15 +298,8 @@ def start():
     print(f"""A drunken thug staggers from the shadows, shouting explitives.
         Swaying, he raises his {foe.equippedWeapon.name}, and you ready your {PC.equippedWeapon.name}.""")
     while victory == 1:
+        foe.tempHP = foe.maxHP
         victory = gameloop(PC, foe)
-        if victory == 1:
-            fight = input("Face a new combatant? (Y/N)")
-            if fight == "Y" or fight == "y":
-                foe.tempHP = 10
-                victory = 0
-                gameloop(PC, foe)
-        else:
-            break
 
 def gameloop(PC, enemy):
     turn = 1
@@ -328,7 +322,11 @@ def gameloop(PC, enemy):
             return(0)
         elif enemy.tempHP < 1:
             print("Your foe crumples in a heap, and you stand victorious.")
-            return(1)
+            fight = input("Face a new combatant? (Y/N)")
+            if fight == "Y" or fight == "y":
+                return(1)
+            else:
+                return(0)
         else:
             turn += 1
             
