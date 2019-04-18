@@ -285,7 +285,7 @@ def attack(char, skill, target):
             target.shock = 4
         else:
             target.shock = dmg
-    print(Fore.YELLOW + f"{target.name} has {target._tempHP} HP remaining.")
+    print(Fore.YELLOW + f"{target.name} has {target.tempHP} HP remaining.")
     char.shock = 0
     print(Style.RESET_ALL)
 
@@ -500,4 +500,4 @@ equipArmor(test, "Cloth")
 equipWeapon(test, "poleaxe")
 #test.equippedArmor = cloth
 #test.equippedWeapon = club
-#start()
+start()
