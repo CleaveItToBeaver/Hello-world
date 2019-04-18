@@ -357,7 +357,7 @@ def combatloop(PC, enemy):
                 return(0)
         else:
             attack(enemy, enemy.DX, PC)
-        if PC._tempHP < 1:
+        if PC.tempHP < 1:
             print("You collapse in the mud, beaten and ashamed.")
             return(0)
         elif enemy.tempHP < 1:
