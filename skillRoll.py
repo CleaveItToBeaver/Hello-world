@@ -132,6 +132,7 @@ def equipArmor(target, ID):
     for x in armorL['armor']:
         if x["ID"] == str(ID):
             print(x)
+            print("\n")
             ID = armor()
             ID.name = x["name"]
             ID.desc = x["desc"]
@@ -151,6 +152,7 @@ def equipWeapon(target, ID):
     for x in weaponL['weapons']:
         if x["ID"] == str(ID):
             print(x)
+            print("\n")
             ID = mWep()
             ID.name = x["name"]
             ID.TL = x["TL"]
@@ -279,33 +281,63 @@ def attack(char, skill, target):
             target.shock = 4
         else:
             target.shock = dmg
-    print(f"{target.name} has {target.tempHP} HP remaining.")
+    print(Fore.YELLOW + f"{target.name} has {target.tempHP} HP remaining.")
     char.shock = 0
+    print(Style.RESET_ALL)
 
 def start():
     PC = baseHuman()
     foe = baseHuman()
-    victory = 1
+    status = 1
+    #Status 1 for arena, 2 for town, 3 for dungeon, 4 for menu. 0 ends the game.
+    
     foe.name = "Faceless thug"
-    equipWeapon(PC, "rapier")
     print(f"Equipping {PC.name}'s Weapon")
-    equipArmor(PC, "Plate")
+    equipWeapon(PC, "rapier")
     print(f"Equipping {PC.name}'s Armor")
-    equipWeapon(foe, "Axe")
+    equipArmor(PC, "Plate")
     print(f"Equipping {foe.name}'s Weapon")
-    equipArmor(foe, "Leather")
+    equipWeapon(foe, "Axe")
     print(f"Equipping {foe.name}'s armor")
+    equipArmor(foe, "Leather")
+    
     PC.name = input("What is your name? ")
-    print(f"""A drunken thug staggers from the shadows, shouting explitives.
-        Swaying, he raises his {foe.equippedWeapon.name}, and you ready your {PC.equippedWeapon.name}.""")
-    while victory == 1:
-        foe.tempHP = foe.maxHP
-        victory = gameloop(PC, foe)
+    
+    while status != 0:
+        destination = input("""\nWhere will you go? Into the [d]ungeons,
+to fight in the [a]rena, into [t]own, or [q]uit? """)
+        if destination == "a" or destination == "A":
+            status = 1
+            print("""\nYou decend into a large circular fighting ring, set into the
+ground and walled with upright sharpened posts. There is a heavy
+wooden portculis across from you, which opens slowly to reveal a
+darkened tunnel beyond.\n""")
+            print(f"""A drunken thug staggers from the shadows, shouting explitives.
+Swaying, he raises his {foe.equippedWeapon.name}, and you ready your
+{PC.equippedWeapon.name}.\n""")
+            while status == 1:
+                foe.tempHP = foe.maxHP
+                status = combatloop(PC, foe)
 
-def gameloop(PC, enemy):
+        elif destination == "t" or destination == "T":
+            status = 2
+            while status == 2:
+                status = townloop(PC)
+
+        elif destination == "d" or destination == "D":
+            status = 3
+            while status == 3:
+                status = dungeonloop(PC)
+                
+        else:
+            print("You retire for the time being.")
+            status = 0
+
+def combatloop(PC, enemy):
     turn = 1
     while PC.tempHP > 0 and enemy.tempHP > 0:
-        print(f"Turn #{turn}")
+        print(Fore.CYAN + Style.DIM + f"Turn #{turn}")
+        print(Style.RESET_ALL)
         if turn%2 == 1:
             if turn == 1:
                 fight = input("Attack? (Y/N)")
@@ -315,22 +347,39 @@ def gameloop(PC, enemy):
                 attack(PC, PC.DX, enemy)
             else:
                 print("You get away safely! (You coward.)")
-                break
+                return(0)
         else:
             attack(enemy, enemy.DX, PC)
         if PC.tempHP < 1:
             print("You collapse in the mud, beaten and ashamed.")
             return(0)
         elif enemy.tempHP < 1:
-            print("Your foe crumples in a heap, and you stand victorious.")
+            reward = random.randrange(20, 100)
+            print(f"""Your foe crumples in a heap, and you stand 
+victorious. You are awarded {reward} silver pieces for your triumph.\n""")
+            PC.SP += reward
+            print(f"You now have {PC.SP} silver pieces.")
             fight = input("Face a new combatant? (Y/N)")
             if fight == "Y" or fight == "y":
                 return(1)
             else:
-                print("You retire to your chambers to rest and recouperate.")
-                return(0)
+                opt = input("[Q]uit, or [r]eturn from the arena? ")
+                if opt == "r" or opt == "R":
+                    print("You leave the arena.")
+                    return(4)
+                else:
+                    print("You retire to your chambers to rest and recouperate.")
+                    return(0)
         else:
             turn += 1
+
+def townloop(PC):
+    opt = input("Town is under construction. Press [r] to return.")
+    if opt == "r" or opt == "R": return(4)
+
+def dungeonloop(PC):
+    opt = input("Dungeon under construction. Press [r] to return.")
+    if opt == "r" or opt == "R": return(4)
             
 test = baseHuman()
 equipArmor(test, "Cloth")
