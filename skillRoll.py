@@ -1,6 +1,7 @@
 import random
 import json
-from colorama import Fore, Style
+from colorama import Fore, Style, init
+init(convert=True)
 
 class armor:
     DR = 0
@@ -246,7 +247,7 @@ def attack(char, skill, target):
             dmg = rollDmg(dice[0], dice[1]+char.equippedWeapon.dmgMod)
             print(f"{char.name}'s {char.equippedWeapon.name} deals {dmg} damage!")
         elif result == 4:
-            dmg = 4
+            dmg = (dice[0]*6) + (dice[1]+char.equippedWeapon.dmgMod)
             print(f"{char.name}'s {char.equippedWeapon.name} deals {dmg} damage!")
         elif result == 1:
             print("Whiff! No damage dealt.")
@@ -326,6 +327,7 @@ def gameloop(PC, enemy):
             if fight == "Y" or fight == "y":
                 return(1)
             else:
+                print("You retire to your chambers to rest and recouperate.")
                 return(0)
         else:
             turn += 1
@@ -335,4 +337,4 @@ equipArmor(test, "Cloth")
 equipWeapon(test, "poleaxe")
 #test.equippedArmor = cloth
 #test.equippedWeapon = club
-#start()
+start()
