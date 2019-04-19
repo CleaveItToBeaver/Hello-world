@@ -3,12 +3,12 @@ A testbed for the very basics
 
 Aiming for a simple, GURPS-like combat and skill system.
 
-Next goals on the chopping block:\n
-	*Loop variation - next combatant, town functions\n
-	*HT-based Death checks\n
-	*Stun\n
-	*Attack Options\n
-	*Defensive Options\n
+Next goals on the chopping block:
+	[X]*Loop variation - next combatant, town functions
+	[X]*HT-based Death checks
+	*Stun
+	*Attack Options
+	*Defensive Options
 	*Treasure tables
 	[X]*"Training" - purchasing CP with accumulated silver
 	[X]*Advancement - upgrading stats with CP
@@ -17,3 +17,4 @@ Next goals on the chopping block:\n
 	*Limbs?
 	*Dungeon Generation + exploration loop using roll(skill) function
 	*Inventory system - probably a dict[] or list referencing class instances?
+	*Randomized arena enemy loadouts
