@@ -61,10 +61,12 @@ class baseHuman():
     CP = 0
     SP = 0
     shock = 0
-    dCheck = 0
+    dead = 0
 
     def __init__(self, DX = 10, HT = 10, IQ = 10, ST = 10):
         print("Init running")
+        self.dead = 0
+        self.dCheck = 0
         self.speed = (DX + HT)/4
         self.maxHP = ST
         self.tempHP = self.maxHP
@@ -292,9 +294,15 @@ def attack(char, skill, target):
             target.shock = 4
         else:
             target.shock = dmg
-        if target.tempHP <= 0 and abs(int(target.tempHP/target.maxHP)) > dCheck:
-            dCheck = abs(int(target.tempHP/target.maxHP))
-            roll(target.HT)
+        if target.tempHP <= (target.maxHP*-5):
+            target.dead = 1
+                print(f"{target.name} succumbs to their wounds and perishes.")
+        elif target.tempHP <= 0 and abs(int(target.tempHP/target.maxHP)) > target.dCheck:
+            target.dCheck = abs(int(target.tempHP/target.maxHP))
+            survival = roll(target.HT-target.dCheck)
+            if survival < 2:
+                target.dead = 1
+                print(f"{target.name} succumbs to their wounds and perishes.")
     print(Fore.YELLOW + f"{target.name} has {target.tempHP} HP.")
     char.shock = 0
     print(Style.RESET_ALL)
@@ -352,7 +360,7 @@ Swaying, he raises his {foe.equippedWeapon.name}, and you ready your
 
 def combatloop(PC, enemy):
     turn = 1
-    while PC.tempHP > 0 and enemy.tempHP > 0:
+    while PC.dead == 0 and enemy.dead == 0:
         print(Fore.CYAN + Style.DIM + f"Turn #{turn}")
         print(Style.RESET_ALL)
         if turn%2 == 1:
@@ -373,15 +381,21 @@ You collapse in the mud, beaten and ashamed. """)
                 print("You get away safely! (You coward.)")
                 return(0)
         else:
-            if enemy.tempHP > 0:
+            if enemy.tempHP < 0:
+                saveMod = abs(int(enemy.tempHP/enemy.maxHP))
+                save = roll(enemy.HT-saveMod) 
+                if save < 2:
+                    print("""Your foe crumples in a heap, and you stand 
+victorious. """)
+                    enemy.dead = 1
+            if enemy.dead == 0:
                 attack(enemy, enemy.DX, PC)
             else:
                 reward = random.randrange(20, 100)
-                print(f"""Your foe crumples in a heap, and you stand 
-victorious. You are awarded {reward} silver pieces for your triumph.\n""")
+                print(f"""You are awarded {reward} silver pieces for your triumph.\n""")
                 PC.SP += reward
                 print(f"You now have {PC.SP} silver pieces.")
-                fight = input("You have {PC.tempHP} HP remaining. Face a new combatant? (Y/N)")
+                fight = input(f"You have {PC.tempHP} HP remaining. Face a new combatant? (Y/N)")
                 if fight == "Y" or fight == "y":
                     return(1)
                 else:
@@ -392,8 +406,8 @@ victorious. You are awarded {reward} silver pieces for your triumph.\n""")
                     else:
                         print("You retire to your chambers to rest and recouperate.")
                         return(0)
-        else:
-            turn += 1
+        #else:
+        turn += 1
 
 def townloop(PC):
     print(Style.RESET_ALL)
@@ -516,4 +530,4 @@ equipArmor(test, "Cloth")
 equipWeapon(test, "poleaxe")
 #test.equippedArmor = cloth
 #test.equippedWeapon = club
-#start()
+start()
