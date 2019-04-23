@@ -61,9 +61,13 @@ class baseHuman():
     CP = 0
     SP = 0
     shock = 0
+    dead = 0
+    defend = 1
 
     def __init__(self, DX = 10, HT = 10, IQ = 10, ST = 10):
         print("Init running")
+        self.dead = 0
+        self.dCheck = 0
         self.speed = (DX + HT)/4
         self.maxHP = ST
         self.tempHP = self.maxHP
@@ -119,13 +123,21 @@ class baseHuman():
 
     @property
     def move(self):
-        self._move = int(self.speed)
+        if self.tempHP < (self.maxHP/3):
+            self._move = int(self.speed/2)
+        else:
+            self._move = int(self.speed)
         return(self._move)
 
     @move.setter
     def move(self, value):
-        self._move = int(self.speed)
+        if self.tempHP < (self.maxHP/3):
+            self._move = int(self.speed/2)
+        else:
+            self._move = int(self.speed)
         return(self._move)
+
+
 
 
 def equipArmor(target, ID):
@@ -239,7 +251,7 @@ def attack(char, skill, target):
     defence = 0
     dmg = 0
     dice = getattr(char, char.equippedWeapon.dmgSrc)
-    if result == 2:
+    if result == 2 and target.defend == 1:
         print(f"{target.name} attempts to defend!")
         defence = roll(target.parry)
         if defence > 1:
@@ -285,7 +297,17 @@ def attack(char, skill, target):
             target.shock = 4
         else:
             target.shock = dmg
-    print(Fore.YELLOW + f"{target.name} has {target.tempHP} HP remaining.")
+        if target.tempHP <= (target.maxHP*-5):
+            target.dead = 1
+            print(f"{target.name} dies from extreme damage.")
+        elif target.tempHP <= 0 and abs(int(target.tempHP/target.maxHP)) > target.dCheck:
+            target.dCheck = abs(int(target.tempHP/target.maxHP))
+            print(f"{target.name} makes a Death Check at -{target.dCheck}:")
+            survival = roll(target.HT-target.dCheck)
+            if survival < 2:
+                target.dead = 1
+                print(f"{target.name} succumbs to their wounds and perishes.")
+    print(Fore.YELLOW + f"{target.name} has {target.tempHP} HP.")
     char.shock = 0
     print(Style.RESET_ALL)
 
@@ -324,6 +346,7 @@ Swaying, he raises his {foe.equippedWeapon.name}, and you ready your
 {PC.equippedWeapon.name}.\n""")
             while status == 1:
                 foe.tempHP = foe.maxHP
+                foe.dead = 0
                 status = combatloop(PC, foe)
 
         elif destination == "t" or destination == "T":
@@ -336,16 +359,24 @@ Swaying, he raises his {foe.equippedWeapon.name}, and you ready your
             while status == 3:
                 status = dungeonloop(PC)
                 
-        else:
+        elif destination == "q" or destination == "Q":
             print("You retire for the time being.")
             status = 0
 
 def combatloop(PC, enemy):
     turn = 1
-    while PC.tempHP > 0 and enemy.tempHP > 0:
+    while PC.dead == 0 and enemy.dead == 0:
         print(Fore.CYAN + Style.DIM + f"Turn #{turn}")
         print(Style.RESET_ALL)
         if turn%2 == 1:
+            PC.defend = 1
+            if PC.tempHP < 0:
+                saveMod = abs(int(PC.tempHP/PC.maxHP))
+                save = roll(PC.HT-saveMod) #
+                if save < 2:
+                    print("""You succumb to your wounds and lose consciousness.
+You collapse in the mud, beaten and ashamed. """)
+                    return(0)
             if turn == 1:
                 fight = input("Attack? (Y/N)")
             else:
@@ -356,34 +387,45 @@ def combatloop(PC, enemy):
                 print("You get away safely! (You coward.)")
                 return(0)
         else:
-            attack(enemy, enemy.DX, PC)
-        if PC.tempHP < 1:
-            print("You collapse in the mud, beaten and ashamed.")
-            return(0)
-        elif enemy.tempHP < 1:
-            reward = random.randrange(20, 100)
-            print(f"""Your foe crumples in a heap, and you stand 
-victorious. You are awarded {reward} silver pieces for your triumph.\n""")
-            PC.SP += reward
-            print(f"You now have {PC.SP} silver pieces.")
-            fight = input("Face a new combatant? (Y/N)")
-            if fight == "Y" or fight == "y":
-                return(1)
-            else:
-                opt = input("[Q]uit, or [r]eturn from the arena? ")
-                if opt == "r" or opt == "R":
-                    print("You leave the arena.")
-                    return(4)
-                else:
-                    print("You retire to your chambers to rest and recouperate.")
-                    return(0)
+            enemy.defend = 1
+            if enemy.tempHP < 0:
+                saveMod = abs(int(enemy.tempHP/enemy.maxHP))
+                print(f"{enemy.name} makes a Death Check at -{saveMod}:")
+                save = roll(enemy.HT-saveMod) 
+                if save < 2:
+                    print("""Your foe crumples in a heap, and you stand 
+victorious. """)
+                    enemy.dead = 1
+            if enemy.dead == 0:
+                attack(enemy, enemy.DX, PC)
+        if enemy.dead == 1:
+            state = victory(PC)
+            print(state)
+            return(state)
         else:
             turn += 1
+
+def victory(PC):
+    reward = random.randrange(20, 100)
+    print(f"""You are awarded {reward} silver pieces for your triumph.\n""")
+    PC.SP += reward
+    print(f"You now have {PC.SP} silver pieces.")
+    fight = input(f"You have {PC.tempHP} HP remaining. Face a new combatant? (Y/N)")
+    if fight == "Y" or fight == "y":
+        return(1)
+    else:
+        opt = input("[Q]uit, or [r]eturn from the arena? ")
+        if opt == "r" or opt == "R":
+            print("You leave the arena.")
+            return(4)
+        else:
+            print("You retire to your chambers to rest and recouperate.")
+            return(0)
 
 def townloop(PC):
     print(Style.RESET_ALL)
     opt = input("""Town is under construction. Pay for [h]ealing; [T]rain Stats;
-Buy [C]P;  Press [r] to return.""")
+Buy [C]P;  Press [r] to return. """)
     if opt == "r" or opt == "R": return(4)
     elif opt == "t" or opt == "T":
         stat = input("\nRaise a stat? [ST]/10CP [DX]/20CP [IQ]/20CP [HT]/10CP [B]ack ")
@@ -393,6 +435,7 @@ Buy [C]P;  Press [r] to return.""")
             if (PC.CP - 10) >= 0:
                 PC.CP -= 10
                 PC.ST += 1
+                PC.setDmg()
                 print(Fore.GREEN + f"""Your ST is now {PC.ST}! You have {PC.CP} CP remaining.\n""")
                 return(2)
             else:
@@ -427,14 +470,14 @@ Buy [C]P;  Press [r] to return.""")
                 return(2)
             else:
                 deficit = abs(PC.CP-10)
-                print(f"Sorry, you need {deficit} more CP to advance this stat.")
+                print(Fore.RED + f"Sorry, you need {deficit} more CP to advance this stat.")
                 return(2)
         else:
-            print("Enter a valid menu option.")
+            print("Enter a valid menu option. ")
             return(2)
     elif opt == "C" or opt == "c":
         buy = input(f"""\nCP (character points) can be purchased for 1000 silver pieces each. You 
-currently have {PC.SP} silver pieces.\n Enter an amount to purchase,or go [b]ack.""")
+currently have {PC.SP} silver pieces.\n Enter an amount to purchase,or go [b]ack. """)
         if (buy.isdigit()):
             buy = int(buy)
             if (PC.SP - (buy*1000)) >= 0:
@@ -445,7 +488,7 @@ SP remaining.\n""")
                 return(2)
             else:
                 deficit = abs(PC.SP-(buy*1000))
-                print(Fore.Red + f"You require {deficit} more silver.")
+                print(Fore.RED + f"You require {deficit} more silver.")
                 return(2)
         elif buy == "b" or buy == "B":
             return(2)
@@ -458,7 +501,7 @@ SP remaining.\n""")
                 if PC.SP - (heal*10) >= 0:
                     PC.SP -= (heal*10)
                     PC.tempHP += heal
-                    print(Fore.GREEN + f"Restored {heal} HP. You now have {PC._tempHP} HP remaining.")
+                    print(Fore.GREEN + f"Restored {heal} HP. You now have {PC.tempHP} HP remaining.")
                     return(2)
                 else:
                     deficit = abs(PC.SP - (heal*10))
@@ -466,7 +509,7 @@ SP remaining.\n""")
                     return(2)
             elif PC.tempHP == PC.maxHP:
                 tithe = input("""You don't need any healing, but the Church gladly accepts donations.
-Enter an amount to tithe, or go [b]ack.""")
+Enter an amount to tithe, or go [b]ack. """)
                 if (tithe.isdigit()):
                     tithe = int(tithe)
                     PC.SP -= abs(tithe)
