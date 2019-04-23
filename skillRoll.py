@@ -62,6 +62,7 @@ class baseHuman():
     SP = 0
     shock = 0
     dead = 0
+    defend = 1
 
     def __init__(self, DX = 10, HT = 10, IQ = 10, ST = 10):
         print("Init running")
@@ -135,6 +136,8 @@ class baseHuman():
         else:
             self._move = int(self.speed)
         return(self._move)
+
+
 
 
 def equipArmor(target, ID):
@@ -248,7 +251,7 @@ def attack(char, skill, target):
     defence = 0
     dmg = 0
     dice = getattr(char, char.equippedWeapon.dmgSrc)
-    if result == 2:
+    if result == 2 and target.defend == 1:
         print(f"{target.name} attempts to defend!")
         defence = roll(target.parry)
         if defence > 1:
@@ -366,6 +369,7 @@ def combatloop(PC, enemy):
         print(Fore.CYAN + Style.DIM + f"Turn #{turn}")
         print(Style.RESET_ALL)
         if turn%2 == 1:
+            PC.defend = 1
             if PC.tempHP < 0:
                 saveMod = abs(int(PC.tempHP/PC.maxHP))
                 save = roll(PC.HT-saveMod) #
@@ -383,6 +387,7 @@ You collapse in the mud, beaten and ashamed. """)
                 print("You get away safely! (You coward.)")
                 return(0)
         else:
+            enemy.defend = 1
             if enemy.tempHP < 0:
                 saveMod = abs(int(enemy.tempHP/enemy.maxHP))
                 print(f"{enemy.name} makes a Death Check at -{saveMod}:")
