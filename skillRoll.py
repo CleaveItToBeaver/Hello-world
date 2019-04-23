@@ -296,9 +296,10 @@ def attack(char, skill, target):
             target.shock = dmg
         if target.tempHP <= (target.maxHP*-5):
             target.dead = 1
-                print(f"{target.name} succumbs to their wounds and perishes.")
+            print(f"{target.name} dies from extreme damage.")
         elif target.tempHP <= 0 and abs(int(target.tempHP/target.maxHP)) > target.dCheck:
             target.dCheck = abs(int(target.tempHP/target.maxHP))
+            print(f"{target.name} makes a Death Check at -{target.dCheck}:")
             survival = roll(target.HT-target.dCheck)
             if survival < 2:
                 target.dead = 1
@@ -342,6 +343,7 @@ Swaying, he raises his {foe.equippedWeapon.name}, and you ready your
 {PC.equippedWeapon.name}.\n""")
             while status == 1:
                 foe.tempHP = foe.maxHP
+                foe.dead = 0
                 status = combatloop(PC, foe)
 
         elif destination == "t" or destination == "T":
@@ -383,6 +385,7 @@ You collapse in the mud, beaten and ashamed. """)
         else:
             if enemy.tempHP < 0:
                 saveMod = abs(int(enemy.tempHP/enemy.maxHP))
+                print(f"{enemy.name} makes a Death Check at -{saveMod}:")
                 save = roll(enemy.HT-saveMod) 
                 if save < 2:
                     print("""Your foe crumples in a heap, and you stand 
@@ -390,24 +393,29 @@ victorious. """)
                     enemy.dead = 1
             if enemy.dead == 0:
                 attack(enemy, enemy.DX, PC)
-            else:
-                reward = random.randrange(20, 100)
-                print(f"""You are awarded {reward} silver pieces for your triumph.\n""")
-                PC.SP += reward
-                print(f"You now have {PC.SP} silver pieces.")
-                fight = input(f"You have {PC.tempHP} HP remaining. Face a new combatant? (Y/N)")
-                if fight == "Y" or fight == "y":
-                    return(1)
-                else:
-                    opt = input("[Q]uit, or [r]eturn from the arena? ")
-                    if opt == "r" or opt == "R":
-                        print("You leave the arena.")
-                        return(4)
-                    else:
-                        print("You retire to your chambers to rest and recouperate.")
-                        return(0)
-        #else:
-        turn += 1
+        if enemy.dead == 1:
+            state = victory(PC)
+            print(state)
+            return(state)
+        else:
+            turn += 1
+
+def victory(PC):
+    reward = random.randrange(20, 100)
+    print(f"""You are awarded {reward} silver pieces for your triumph.\n""")
+    PC.SP += reward
+    print(f"You now have {PC.SP} silver pieces.")
+    fight = input(f"You have {PC.tempHP} HP remaining. Face a new combatant? (Y/N)")
+    if fight == "Y" or fight == "y":
+        return(1)
+    else:
+        opt = input("[Q]uit, or [r]eturn from the arena? ")
+        if opt == "r" or opt == "R":
+            print("You leave the arena.")
+            return(4)
+        else:
+            print("You retire to your chambers to rest and recouperate.")
+            return(0)
 
 def townloop(PC):
     print(Style.RESET_ALL)
