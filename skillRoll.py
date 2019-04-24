@@ -3,6 +3,9 @@ import json
 from colorama import Fore, Style, init
 init(convert=True)
 
+armorL = {}
+weaponL = {}
+
 class armor:
     DR = 0
     description = "Naked as the day you were born. You savage."
@@ -137,13 +140,14 @@ class baseHuman():
             self._move = int(self.speed)
         return(self._move)
 
-
-
-
-def equipArmor(target, ID):
+def loadArmor():
     armorL = {}
     with open('armor.txt') as infile:
         armorL = json.load(infile)
+    infile.close()
+    return(armorL)
+
+def equipArmor(target, ID):
 
     for x in armorL['armor']:
         if x["ID"] == str(ID):
@@ -158,13 +162,15 @@ def equipArmor(target, ID):
             ID.ID = x["ID"]                
             target.equippedArmor = ID
         else: pass
-    infile.close()
 
-def equipWeapon(target, ID):
+def loadWeapons():
     weaponL = {}
     with open('weapons.txt') as infile:
         weaponL = json.load(infile)
+    infile.close()
+    return(weaponL)
 
+def equipWeapon(target, ID):
     for x in weaponL['weapons']:
         if x["ID"] == str(ID):
             print(x)
@@ -186,8 +192,6 @@ def equipWeapon(target, ID):
             ID.ID = x["ID"]
             target.equippedWeapon = ID
         else: pass
-    infile.close()
-    
 
 def roll(skill):
     y = 0
@@ -312,6 +316,7 @@ def attack(char, skill, target):
     print(Style.RESET_ALL)
 
 def start():
+    
     PC = baseHuman()
     foe = baseHuman()
     status = 1
@@ -537,10 +542,14 @@ def dungeonloop(PC):
     print(Style.RESET_ALL)
     opt = input("Dungeon under construction. Press [r] to return.")
     if opt == "r" or opt == "R": return(4)
-            
+
+armorL = loadArmor()
+weaponL = loadWeapons()
+
 test = baseHuman()
-equipArmor(test, "Cloth")
-equipWeapon(test, "poleaxe")
-#test.equippedArmor = cloth
-#test.equippedWeapon = club
-start()
+rArmor = random.choice(armorL['armor'])
+equipArmor(test, rArmor['ID'])
+rWeap = random.choice(weaponL['weapons'])
+equipWeapon(test, rWeap['ID'])
+
+#start()
