@@ -192,7 +192,14 @@ def equipWeapon(target, ID):
             ID.ID = x["ID"]
             target.equippedWeapon = ID
         else: pass
-
+#---------Loot Draw----------------
+def lootArmor():
+    loot = {}
+    loot = random.choices(armorL['armor'], [0, 35, 30, 15, 10, 5, 5])
+    print(type(loot))
+    return loot
+           
+#---------Loot End-----------------
 def roll(skill):
     y = 0
     i = 0
