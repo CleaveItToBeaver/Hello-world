@@ -5,6 +5,8 @@ init(convert=True)
 
 armorL = {}
 weaponL = {}
+lootTabA = []
+lootTabW = []
 
 class armor:
     DR = 0
@@ -61,14 +63,12 @@ class baseHuman():
     HT = 10
     Thr = [1, -2]
     Sw = [1, 0]
-    CP = 0
-    SP = 0
     shock = 0
     dead = 0
     defend = 1
 
     def __init__(self, DX = 10, HT = 10, IQ = 10, ST = 10):
-        print("Init running")
+        #print("Init running")
         self.dead = 0
         self.dCheck = 0
         self.speed = (DX + HT)/4
@@ -94,13 +94,13 @@ class baseHuman():
         
     @property
     def speed(self):
-        print("Getter running")
+        #print("Getter running")
         self._speed = (self.DX + self.HT)/4
         return(self._speed)
 
     @speed.setter
     def speed(self, value):
-        print("Setter running")
+        #print("Setter running")
         self._speed = (self.DX + self.HT) / 4
         return(self._speed)
 
@@ -140,11 +140,23 @@ class baseHuman():
             self._move = int(self.speed)
         return(self._move)
 
+class playerClass(baseHuman):
+    CP = 0
+    SP = 0
+    inventory = []
+
 def loadArmor():
     armorL = {}
     with open('armor.txt') as infile:
         armorL = json.load(infile)
     infile.close()
+    y = 0
+    for x in armorL['armor']:
+        y += 1
+        #y is for debugging or determining new weights as the index grows
+        print(y)
+        aTup = (y, x['ID'])
+        lootTabA.append(aTup)
     return(armorL)
 
 def equipArmor(target, ID):
@@ -168,6 +180,12 @@ def loadWeapons():
     with open('weapons.txt') as infile:
         weaponL = json.load(infile)
     infile.close()
+    y = 0
+    for x in weaponL['weapons']:
+        y += 1
+        print(y)
+        aTup = (y, x['ID'])
+        lootTabW.append(aTup)
     return(weaponL)
 
 def equipWeapon(target, ID):
@@ -194,10 +212,13 @@ def equipWeapon(target, ID):
         else: pass
 #---------Loot Draw----------------
 def lootArmor():
-    loot = {}
-    loot = random.choices(armorL['armor'], [0, 35, 30, 15, 10, 5, 5])
-    print(type(loot))
-    return loot
+    loot = random.choices(lootTabA, [0, 35, 30, 15, 10, 5, 5])
+    #lootTable, Weights per list item
+    return loot[0][1]
+
+def lootWeapon():
+    loot = random.choices(lootTabW, [0, 35, 30, 15, 10, 5, 5])
+    return loot[0][1]
            
 #---------Loot End-----------------
 def roll(skill):
@@ -254,7 +275,7 @@ def rollDmg(dice, modifier):
     return total
 
     
-def attack(char, skill, target):
+def attack(char, skill, target, dType="N"):
     mod = skill - char.shock
     if char.shock > 0:
         print(f"{char.name} attacks with -{char.shock} shock!")
@@ -262,9 +283,19 @@ def attack(char, skill, target):
     defence = 0
     dmg = 0
     dice = getattr(char, char.equippedWeapon.dmgSrc)
-    if result == 2 and target.defend == 1:
+    if dType == "s" or dType == "S":
+        if dice[0] > 2:
+            dice[1] += dice[0]
+        else:
+            dice[1] += 2
+    else:
+        pass
+    if result == 2 and target.defend > 0:
         print(f"{target.name} attempts to defend!")
-        defence = roll(target.parry)
+        if target.defend == 1:
+            defence = roll(target.parry)
+        elif target.defend == 2:
+            defence = roll(target.parry+2)
         if defence > 1:
             dmg = 0
             print(f"{target.name} fended off the attack!")
@@ -324,7 +355,7 @@ def attack(char, skill, target):
 
 def start():
     
-    PC = baseHuman()
+    PC = playerClass()
     foe = baseHuman()
     status = 1
     #Status 1 for arena, 2 for town, 3 for dungeon, 4 for menu. 0 ends the game.
@@ -394,7 +425,28 @@ You collapse in the mud, beaten and ashamed. """)
             else:
                 fight = input("Continue attacking? (Y/N) ")
             if fight == "Y" or fight == "y":
-                attack(PC, PC.DX, enemy)
+                attType = input("""\n[N]ormal attack, [A]ll-Out Attack (no defence),
+All-Out [D]efend, or [R]eady an item? """)
+                if attType == "n" or attType == "N":
+                    attack(PC, PC.DX, enemy)
+                elif attType == "A" or attType == "a":
+                    PC.defend = 0
+                    aoa = input("""\n[D]etermined (+4 to hit);
+Dou[b]le (2 attacks with weapon that doesn't need to be readied,
+or dual wielded weapons);
+[S]trong (+2 dmg or +1/die, whichever is better) """)
+                    if aoa == "D" or aoa == "d":
+                        attack(PC, PC.DX+4, enemy)
+                    elif aoa == "b" or aoa == "B":
+                        attack(PC, PC.DX, enemy)
+                        attack(PC, PC.DX, enemy)
+                    elif aoa == "s" or aoa == "S":
+                        attack(PC, PC.DX, enemy, aoa)
+                elif attType == "d" or attType == "D":
+                    PC.defend = 2
+                elif attType == "r" or attType == "R":
+                    print("Currently does nothing. ")
+                    
             else:
                 print("You get away safely! (You coward.)")
                 return(0)
@@ -553,7 +605,7 @@ def dungeonloop(PC):
 armorL = loadArmor()
 weaponL = loadWeapons()
 
-test = baseHuman()
+test = playerClass()
 rArmor = random.choice(armorL['armor'])
 equipArmor(test, rArmor['ID'])
 rWeap = random.choice(weaponL['weapons'])
