@@ -7,6 +7,7 @@ armorL = {}
 weaponL = {}
 lootTabA = []
 lootTabW = []
+lootTabT = []
 
 class armor:
     DR = 0
@@ -155,7 +156,7 @@ def loadArmor():
         y += 1
         #y is for debugging or determining new weights as the index grows
         print(y)
-        aTup = (y, x['ID'])
+        aTup = (x['ID'], x['value'])
         lootTabA.append(aTup)
     return(armorL)
 
@@ -184,7 +185,7 @@ def loadWeapons():
     for x in weaponL['weapons']:
         y += 1
         print(y)
-        aTup = (y, x['ID'])
+        aTup = (x['ID'], x['cost'])
         lootTabW.append(aTup)
     return(weaponL)
 
@@ -214,11 +215,23 @@ def equipWeapon(target, ID):
 def lootArmor():
     loot = random.choices(lootTabA, [0, 35, 30, 15, 10, 5, 5])
     #lootTable, Weights per list item
-    return loot[0][1]
+    return loot[0][0]
 
 def lootWeapon():
     loot = random.choices(lootTabW, [0, 35, 30, 15, 10, 5, 5])
-    return loot[0][1]
+    return loot[0][0]
+
+def drawLoot(char, iT):
+    if iT == 'armor':
+        item = lootArmor()
+        index = [i for i, v in enumerate(lootTabA) if v[0] == item].pop()
+        char.inventory.append(lootTabA[index])
+    elif iT == 'weapon':
+        item = lootWeapon()
+        index = [i for i, v in enumerate(lootTabW) if v[0] == item].pop()
+        char.inventory.append(lootTabW[index])
+    elif iT == 'treasure':
+        print("Expand this function.")
            
 #---------Loot End-----------------
 def roll(skill):
@@ -278,7 +291,9 @@ def rollDmg(dice, modifier):
 def attack(char, skill, target, dType="N"):
     mod = skill - char.shock
     if char.shock > 0:
-        print(f"{char.name} attacks with -{char.shock} shock!")
+        print(f"\n{char.name} attacks with -{char.shock} shock!")
+    else:
+        print(f"\n{char.name} attacks!")
     result = roll(mod)
     defence = 0
     dmg = 0
@@ -291,7 +306,7 @@ def attack(char, skill, target, dType="N"):
     else:
         pass
     if result == 2 and target.defend > 0:
-        print(f"{target.name} attempts to defend!")
+        print(f"\n{target.name} attempts to defend!")
         if target.defend == 1:
             defence = roll(target.parry)
         elif target.defend == 2:
@@ -359,20 +374,25 @@ def start():
     foe = baseHuman()
     status = 1
     #Status 1 for arena, 2 for town, 3 for dungeon, 4 for menu. 0 ends the game.
-    
+
+    #Prime enemy
     foe.name = "Faceless thug"
+    print(f"Equipping {foe.name}'s armor")
+    rArmor = random.choice(armorL['armor'])
+    equipArmor(foe, rArmor['ID'])
+    
+    print(f"Equipping {foe.name}'s Weapon")
+    rWeap = random.choice(weaponL['weapons'])
+    equipWeapon(foe, rWeap['ID'])
+    
+    #Prime Player
+    PC.name = input("What is your name? ")
+    PC.SP += 3200
+    PC.CP += 15
     print(f"Equipping {PC.name}'s Weapon")
     equipWeapon(PC, "rapier")
     print(f"Equipping {PC.name}'s Armor")
     equipArmor(PC, "Plate")
-    print(f"Equipping {foe.name}'s Weapon")
-    equipWeapon(foe, "Axe")
-    print(f"Equipping {foe.name}'s armor")
-    equipArmor(foe, "Leather")
-    
-    PC.name = input("What is your name? ")
-    PC.SP += 3200
-    PC.CP += 15
     
     while status != 0:
         print(Style.RESET_ALL)
@@ -461,7 +481,13 @@ or dual wielded weapons);
 victorious. """)
                     enemy.dead = 1
             if enemy.dead == 0:
-                attack(enemy, enemy.DX, PC)
+                AT = random.randrange(1, 50)
+                if AT < 30:
+                    attack(enemy, enemy.DX, PC)
+                else:
+                    print(f"{enemy.name} drops their guard and delivers a precise strike!")
+                    attack(enemy, enemy.DX+4, PC)
+                    enemy.defend = 0
         if enemy.dead == 1:
             state = victory(PC)
             print(state)
