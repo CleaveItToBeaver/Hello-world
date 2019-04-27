@@ -289,15 +289,18 @@ def rollDmg(dice, modifier):
 
     
 def attack(char, skill, target, dType="N"):
+    result = 0
     mod = skill - char.shock
     if char.shock > 0:
         print(f"\n{char.name} attacks with -{char.shock} shock!")
     else:
         print(f"\n{char.name} attacks!")
     result = roll(mod)
+    print(f"Result: {result}")
     defence = 0
     dmg = 0
-    dice = getattr(char, char.equippedWeapon.dmgSrc)
+    tempdice = getattr(char, char.equippedWeapon.dmgSrc)
+    dice = tempdice
     if dType == "s" or dType == "S":
         if dice[0] > 2:
             dice[1] += dice[0]
@@ -317,6 +320,9 @@ def attack(char, skill, target, dType="N"):
         else:
             dmg = rollDmg(dice[0], dice[1]+char.equippedWeapon.dmgMod)
             print(f"{char.name}'s {char.equippedWeapon.name} deals {dmg} damage!")
+    elif result == 2 and target.defend == 0:
+        dmg = rollDmg(dice[0], dice[1]+char.equippedWeapon.dmgMod)
+        print(f"{char.name}'s {char.equippedWeapon.name} deals {dmg} damage!")
     else:
         if result == 3:
             dmg = rollDmg(dice[0], dice[1]+char.equippedWeapon.dmgMod)
@@ -349,23 +355,22 @@ def attack(char, skill, target, dType="N"):
             print(f"Impaling weapons deal double damage after DR! ({dmg})")
         else:
             pass
-        target.tempHP -= dmg
-        if dmg > 4:
-            target.shock = 4
-        else:
-            target.shock = dmg
-        if target.tempHP <= (target.maxHP*-5):
+    target.tempHP -= dmg
+    if dmg > 4:
+        target.shock = 4
+    else:
+        target.shock = dmg
+    if target.tempHP <= (target.maxHP*-5):
+        target.dead = 1
+        print(f"{target.name} dies from extreme damage.")
+    elif target.tempHP <= 0 and abs(int(target.tempHP/target.maxHP)) > target.dCheck:
+        target.dCheck = abs(int(target.tempHP/target.maxHP))
+        print(f"{target.name} makes a Death Check at -{target.dCheck}:")
+        survival = roll(target.HT-target.dCheck)
+        if survival < 2:
             target.dead = 1
-            print(f"{target.name} dies from extreme damage.")
-        elif target.tempHP <= 0 and abs(int(target.tempHP/target.maxHP)) > target.dCheck:
-            target.dCheck = abs(int(target.tempHP/target.maxHP))
-            print(f"{target.name} makes a Death Check at -{target.dCheck}:")
-            survival = roll(target.HT-target.dCheck)
-            if survival < 2:
-                target.dead = 1
-                print(f"{target.name} succumbs to their wounds and perishes.")
+            print(f"{target.name} succumbs to their wounds and perishes.")
     print(Fore.YELLOW + f"{target.name} has {target.tempHP} HP.")
-    char.shock = 0
     print(Style.RESET_ALL)
 
 def start():
@@ -470,6 +475,7 @@ or dual wielded weapons);
             else:
                 print("You get away safely! (You coward.)")
                 return(0)
+            PC.shock = 0
         else:
             enemy.defend = 1
             if enemy.tempHP < 0:
@@ -488,6 +494,7 @@ victorious. """)
                     print(f"{enemy.name} drops their guard and delivers a precise strike!")
                     attack(enemy, enemy.DX+4, PC)
                     enemy.defend = 0
+            enemy.shock = 0                    
         if enemy.dead == 1:
             state = victory(PC)
             print(state)
@@ -637,4 +644,4 @@ equipArmor(test, rArmor['ID'])
 rWeap = random.choice(weaponL['weapons'])
 equipWeapon(test, rWeap['ID'])
 
-#start()
+start()
