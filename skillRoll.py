@@ -251,18 +251,37 @@ def drawLoot(char, iT, level=1):
         elif lootTabT[index][0] == "PP":
             char.PP += 100*level
             print(f"Gained {100*level} platinum pieces!")
-        elif lootTabT[index][0] == "Gems":
-            y = 0
-            for i in range(level):
-                x = random.randrange(1,5)
-                y += x
-            print(f"Found {y} {lootTabT[index][0]}!")
-            char.inventory.append([lootTabT[index], y])
         else:
-            char.inventory.append([lootTabT[index], 1])
-            print(f"Found a {lootTabT[index][0]}!")
+            item = lootTabT[index][0]
+            if item == "Gems":
+                y = 0
+                for i in range(level):
+                    x = random.randrange(1,5)
+                    y += x
+            elif item == "Jewelery":
+                y = level
+            else: y = 1
+            print(f"Found {y} {lootTabT[index][0]}!")
+            dupe = 0
+            for i in char.inventory:
+                if i[0][0] == item:
+                    i[1] += y
+                    dupe = 1
+                else:
+                    pass
+            if dupe == 0:
+                char.inventory.append([lootTabT[index], y])
+            #else: char.inventory.append([lootTabT[index], 1])
            
 #---------Loot End-----------------
+#---------Debug Functions----------
+def massLoot():
+	i = 0
+	while i < 10:
+		drawLoot(test, 'treasure')
+		i += 1
+#---------End Debug Functions------
+            
 def roll(skill):
     y = 0
     i = 0
