@@ -3,8 +3,6 @@ import json
 from colorama import Fore, Style, init
 init(convert=True)
 
-armorL = {}
-weaponL = {}
 gearL = {}
 lootTabA = []
 lootTabW = []
@@ -144,7 +142,11 @@ class baseHuman():
 
 class playerClass(baseHuman):
     CP = 0
+    cuP = 0
     SP = 0
+    GP = 0
+    EP = 0
+    PP = 0
     inventory = []
 
 def loadGear():
@@ -163,6 +165,11 @@ def loadGear():
         print(y)
         aTup = (x['ID'], x['cost'])
         lootTabW.append(aTup)
+    for x in gearL['treasure']:
+        y += 1
+        print(y)
+        aTup = (x['name'], x['value'])
+        lootTabT.append(aTup)
     return(gearL)
 
 def equipArmor(target, ID):
@@ -213,17 +220,47 @@ def lootWeapon():
     loot = random.choices(lootTabW, [0, 35, 30, 15, 10, 5, 5])
     return loot[0][0]
 
-def drawLoot(char, iT):
+def lootTreasure():
+    loot = random.choices(lootTabT, [25, 25, 15, 15, 10, 4, 3, 3])
+    return loot[0][0]
+
+def drawLoot(char, iT, level=1):
     if iT == 'armor':
         item = lootArmor()
         index = [i for i, v in enumerate(lootTabA) if v[0] == item].pop()
-        char.inventory.append(lootTabA[index])
+        char.inventory.append([lootTabA[index], 1])
     elif iT == 'weapon':
         item = lootWeapon()
         index = [i for i, v in enumerate(lootTabW) if v[0] == item].pop()
-        char.inventory.append(lootTabW[index])
+        char.inventory.append([lootTabW[index], 1])
     elif iT == 'treasure':
-        print("Expand this function.")
+        item = lootTreasure()
+        index = [i for i, v in enumerate(lootTabT) if v[0] == item].pop()
+        if lootTabT[index][0] == "CP":
+            char.cuP += 1000*level
+            print(f"Gained {1000*level} copper pieces!")
+        elif lootTabT[index][0] == "SP":
+            char.SP += 1000*level
+            print(f"Gained {1000*level} silver pieces!")
+        elif lootTabT[index][0] == "EP":
+            char.EP += 750*level
+            print(f"Gained {750*level} electrum pieces!")
+        elif lootTabT[index][0] == "GP":
+            char.GP += 250*level
+            print(f"Gained {250*level} gold pieces!")
+        elif lootTabT[index][0] == "PP":
+            char.PP += 100*level
+            print(f"Gained {100*level} platinum pieces!")
+        elif lootTabT[index][0] == "Gems":
+            y = 0
+            for i in range(level):
+                x = random.randrange(1,5)
+                y += x
+            print(f"Found {y} {lootTabT[index][0]}!")
+            char.inventory.append([lootTabT[index], y])
+        else:
+            char.inventory.append([lootTabT[index], 1])
+            print(f"Found a {lootTabT[index][0]}!")
            
 #---------Loot End-----------------
 def roll(skill):
@@ -393,6 +430,11 @@ def start():
     
     while status != 0:
         print(Style.RESET_ALL)
+        PC.SP += (PC.cuP*.1) + (PC.EP/2) + (PC.GP*10) + (PC.PP*50)
+        PC.cuP = 0
+        PC.EP = 0
+        PC.GP = 0
+        PC.PP = 0
         destination = input("""\nWhere will you go? Into the [d]ungeons,
 to fight in the [a]rena, into [t]own, or [q]uit? """)
         if destination == "a" or destination == "A":
@@ -624,8 +666,13 @@ Enter an amount to tithe, or go [b]ack. """)
                 
 def dungeonloop(PC):
     print(Style.RESET_ALL)
-    opt = input("Dungeon under construction. Press [r] to return.")
+    opt = input("Dungeon under construction. Test [l]ooting. Press [r] to return.")
     if opt == "r" or opt == "R": return(4)
+    elif opt == "l" or opt == "L":
+        drawLoot(PC, "treasure")
+        return(4)
+    floor = 1
+    room = 0
 
 gearL = loadGear()
 
