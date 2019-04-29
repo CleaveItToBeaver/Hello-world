@@ -5,6 +5,7 @@ init(convert=True)
 
 armorL = {}
 weaponL = {}
+gearL = {}
 lootTabA = []
 lootTabW = []
 lootTabT = []
@@ -146,23 +147,27 @@ class playerClass(baseHuman):
     SP = 0
     inventory = []
 
-def loadArmor():
-    armorL = {}
-    with open('armor.txt') as infile:
-        armorL = json.load(infile)
+def loadGear():
+    gearL = {}
+    with open('loot.txt') as infile:
+        gearL = json.load(infile)
     infile.close()
     y = 0
-    for x in armorL['armor']:
+    for x in gearL['armor']:
         y += 1
-        #y is for debugging or determining new weights as the index grows
         print(y)
         aTup = (x['ID'], x['value'])
         lootTabA.append(aTup)
-    return(armorL)
+    for x in gearL['weapons']:
+        y += 1
+        print(y)
+        aTup = (x['ID'], x['cost'])
+        lootTabW.append(aTup)
+    return(gearL)
 
 def equipArmor(target, ID):
 
-    for x in armorL['armor']:
+    for x in gearL['armor']:
         if x["ID"] == str(ID):
             print(x)
             print("\n")
@@ -176,21 +181,8 @@ def equipArmor(target, ID):
             target.equippedArmor = ID
         else: pass
 
-def loadWeapons():
-    weaponL = {}
-    with open('weapons.txt') as infile:
-        weaponL = json.load(infile)
-    infile.close()
-    y = 0
-    for x in weaponL['weapons']:
-        y += 1
-        print(y)
-        aTup = (x['ID'], x['cost'])
-        lootTabW.append(aTup)
-    return(weaponL)
-
 def equipWeapon(target, ID):
-    for x in weaponL['weapons']:
+    for x in gearL['weapons']:
         if x["ID"] == str(ID):
             print(x)
             print("\n")
@@ -383,11 +375,11 @@ def start():
     #Prime enemy
     foe.name = "Faceless thug"
     print(f"Equipping {foe.name}'s armor")
-    rArmor = random.choice(armorL['armor'])
+    rArmor = random.choice(gearL['armor'])
     equipArmor(foe, rArmor['ID'])
     
     print(f"Equipping {foe.name}'s Weapon")
-    rWeap = random.choice(weaponL['weapons'])
+    rWeap = random.choice(gearL['weapons'])
     equipWeapon(foe, rWeap['ID'])
     
     #Prime Player
@@ -635,13 +627,12 @@ def dungeonloop(PC):
     opt = input("Dungeon under construction. Press [r] to return.")
     if opt == "r" or opt == "R": return(4)
 
-armorL = loadArmor()
-weaponL = loadWeapons()
+gearL = loadGear()
 
 test = playerClass()
-rArmor = random.choice(armorL['armor'])
+rArmor = random.choice(gearL['armor'])
 equipArmor(test, rArmor['ID'])
-rWeap = random.choice(weaponL['weapons'])
+rWeap = random.choice(gearL['weapons'])
 equipWeapon(test, rWeap['ID'])
 
-start()
+#start()
