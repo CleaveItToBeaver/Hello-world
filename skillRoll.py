@@ -698,9 +698,93 @@ Enter an amount to tithe, or go [b]ack. """)
                 else:
                     pass
             print(f"You now have {PC.SP} SP.")
-        
 
-def explore():
+#--------Dungeon Rooms-----------        
+def sidePassage(PC, ex):
+    if ex%2 == 1:
+            passage = "There is a glint in the passage."
+    else: passage = ""
+    c = input(f"Side Passage. {passage} [C]ontinue past it, or [t]ake the passage?")
+    if c == "t" or c == "T":
+        if passage != "":
+            t = random.randrange(1, 21)
+            if t < 3: print("Wandering monster.")
+            elif t > 2 and t < 5: print("Trap!")
+            elif t > 4 and t < 7: print("Valuable item!")
+            else: print("Just a reflection from a shallow puddle.")
+        else: print("You take the passage without incident.")
+    elif c == "c" or c == "C": print("You continue forward safely.")
+
+def passage(PC):
+    print("The passage continues straight for 60 feet.")
+    if PC.lost > 0:
+        print("You feel like you're wandering in circles.")
+        PC.room = random.randrange(1, 11)
+
+def door(PC):
+    c = input("A locked door. [F]orce it, or [c]ontinue onward?")
+    if c == "c" or c == "C": print("You continue forward safely.")
+    elif c == "f" or c == "F":
+        force = 0
+        bail = 0
+        while force < 2 and bail < 1:
+            force = roll(PC.ST)
+            if force > 1:
+                print("You successfully breach the door.")
+                chamber(PC)
+            else:
+                c = input("The door sticks tight. [T]ry again, or [c]ontinue past?")
+                if c == "c" or c == "C":
+                    bail = 1
+                    print("You continue forward safely.")
+                elif c == "t" or c == "T":
+                    bail = 0
+
+def chamber(PC):
+    print("Chamber/room.")
+    contents = random.randrange(1, 21)
+    if contents < 13:
+        print("This room is bare and its contents picked over.")
+        #loot useful stuff? chance
+    elif contents > 12 and contents < 15:
+        print("Wandering Monster")
+    elif contents > 14 and contents < 18:
+        print("Treasure and monster!")
+        #monster stuff
+        drawLoot(PC, "treasure", PC.floor)
+    elif contents == 18:
+        print("Treasure!")
+        drawLoot(PC, "treasure", PC.floor)
+    elif contents == 19:
+        print("Stairs!")
+    elif contents == 20:
+        print("Tricks and traps.")
+
+def passageTurn(PC, ex):
+    if ex%2 == 1:
+            passage = "There is a glint in the passage."
+    else: passage = ""
+    c = input(f"The passage turns. {passage} [C]ontinue past it, or [b]acktrack?")
+    if c == "c" or c == "C":
+        if passage != "":
+            t = random.randrange(1, 21)
+            if t < 3: print("Wandering monster.")
+            elif t > 2 and t < 5: print("Trap!")
+            elif t > 4 and t < 7: print("Valuable item!")
+            else: print("Just a reflection from a shallow puddle.")
+        else: print("You take the passage without incident.")
+    elif c == "b" or c == "B":
+        backtrack = roll(PC.IQ-PC.room)
+        if backtrack > 1:
+            print("You make your way back.")
+            PC.room = 1
+        else:
+            print("Uh oh, this doesn't look right... You're lost.")
+            PC.lost = 1
+#--------End Dungeon Rooms--------
+
+def explore(PC):
+    ex = 0
     ex = random.randrange(1, 21)
     if PC.lost > 0: PC.room -= 1
     if PC.lost > 0 and PC.room == 0:
@@ -709,41 +793,46 @@ def explore():
         PC.room = 1
         
     if ex > 0 and ex < 3:
-        print("The passage continues straight for 60 feet.")
-        if PC.lost > 0:
-            print("You feel like you're wandering in circles.")
-            PC.room = random.randrange(1, 11)
+        passage(PC)
             
     elif ex > 2 and ex < 8:
-        if ex%2 == 1:
-            passage = "There is a glint in the passage."
-        else: passage = ""
-        c = input(f"Side Passage. {passage} [C]ontinue past it, or [t]ake the passage?")
-        if c == "t" or c == "T":
-            if passage != "":
-                t = random.randrange(1, 21)
-                if t < 3: print("Wandering monster.")
-                elif t > 2 and t < 5: print("Trap!")
-                elif t > 4 and t < 7: print("Valuable item!")
-                else: print("Just a reflection from a shallow puddle.")
-            else: print("You take the passage without incident.")
-        elif c == "c" or c == "C": print("You continue forward safely.")
+        sidePassage(PC, ex)
                   
     elif ex > 7 and ex < 11:
-        print("Door.")
+        door(PC)        
         
     elif ex > 10 and ex < 14:
-        print("Chamber.")
+        chamber(PC)
+        
     elif ex > 13 and ex < 17:
-        print("Passage turns.")
+        passageTurn(PC, ex)
+        
     elif ex == 17:
-        print("Dead end.")
+        back = input("Dead end. Gotta [b]acktrack.")
+        if back == "b" or back == "B":
+            backtrack = roll(PC.IQ-PC.room)
+            if backtrack > 1:
+                print("You make your way back.")
+                PC.room = 1
+            else:
+                print("Uh oh, this doesn't look right... You're lost.")
+                PC.lost = 1
+                
     elif ex == 18:
-        print("Stairs.")
+        c = input("Stairs. [T]ake the stairs, or [c]ontinue past?")
+        if c == "C" or c == "c":
+            print("You move past without incident.")
+            #useful loot chance?
+        elif c == "t" or c == "T":
+            print("You take the stairs.")
+            #Determine floor change + direction - need the poster
+            
     elif ex == 19:
         print("Wandering monster!")
+        #Need monsters, WM function
     elif ex == 20:
         print("Tricks or traps.")
+        #Need the poster
     else:
         print("Oops! Rolled out of range.")
                 
@@ -761,7 +850,7 @@ def dungeonloop(PC):
         drawLoot(PC, "treasure")
         return(3)
     elif opt == "e" or opt == "E":
-        explore()
+        explore(PC)
         PC.room += 1
         return(3)
     
