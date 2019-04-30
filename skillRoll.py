@@ -148,6 +148,10 @@ class playerClass(baseHuman):
     EP = 0
     PP = 0
     inventory = []
+    lost = 0
+    pursued = 0
+    floor = 1
+    room = 0
 
 def loadGear():
     gearL = {}
@@ -696,17 +700,72 @@ Enter an amount to tithe, or go [b]ack. """)
             print(f"You now have {PC.SP} SP.")
         
 
-
+def explore():
+    ex = random.randrange(1, 21)
+    if PC.lost > 0: PC.room -= 1
+    if PC.lost > 0 and PC.room == 0:
+        print("This area looks familiar. You regain your bearings.")
+        PC.lost = 0
+        PC.room = 1
+        
+    if ex > 0 and ex < 3:
+        print("The passage continues straight for 60 feet.")
+        if PC.lost > 0:
+            print("You feel like you're wandering in circles.")
+            PC.room = random.randrange(1, 11)
+            
+    elif ex > 2 and ex < 8:
+        if ex%2 == 1:
+            passage = "There is a glint in the passage."
+        else: passage = ""
+        c = input(f"Side Passage. {passage} [C]ontinue past it, or [t]ake the passage?")
+        if c == "t" or c == "T":
+            if passage != "":
+                t = random.randrange(1, 21)
+                if t < 3: print("Wandering monster.")
+                elif t > 2 and t < 5: print("Trap!")
+                elif t > 4 and t < 7: print("Valuable item!")
+                else: print("Just a reflection from a shallow puddle.")
+            else: print("You take the passage without incident.")
+        elif c == "c" or c == "C": print("You continue forward safely.")
+                  
+    elif ex > 7 and ex < 11:
+        print("Door.")
+        
+    elif ex > 10 and ex < 14:
+        print("Chamber.")
+    elif ex > 13 and ex < 17:
+        print("Passage turns.")
+    elif ex == 17:
+        print("Dead end.")
+    elif ex == 18:
+        print("Stairs.")
+    elif ex == 19:
+        print("Wandering monster!")
+    elif ex == 20:
+        print("Tricks or traps.")
+    else:
+        print("Oops! Rolled out of range.")
                 
 def dungeonloop(PC):
     print(Style.RESET_ALL)
-    opt = input("Dungeon under construction. Test [l]ooting. Press [r] to return.")
+    PC.floor = 1
+    PC.room = 0
+    if PC.lost == 0:
+        opt = input("Dungeon under construction. [E]xplore the dungeon! Test [l]ooting. Press [r] to return.")
+    else:
+        opt = input("[E]xplore randomly, hoping to find your way back. ")
+        
     if opt == "r" or opt == "R": return(4)
     elif opt == "l" or opt == "L":
         drawLoot(PC, "treasure")
         return(3)
-    floor = 1
-    room = 0
+    elif opt == "e" or opt == "E":
+        explore()
+        PC.room += 1
+        return(3)
+    
+    
 
 gearL = loadGear()
 
