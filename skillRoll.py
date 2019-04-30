@@ -168,7 +168,7 @@ def loadGear():
     for x in gearL['treasure']:
         y += 1
         print(y)
-        aTup = (x['name'], x['value'])
+        aTup = (x['name'], x['value'], x['tag'])
         lootTabT.append(aTup)
     return(gearL)
 
@@ -575,7 +575,7 @@ def victory(PC):
 def townloop(PC):
     print(Style.RESET_ALL)
     opt = input("""Town is under construction. Pay for [h]ealing; [T]rain Stats;
-Buy [C]P;  Press [r] to return. """)
+Buy [C]P;  [S]ell loot; Press [r] to return. """)
     if opt == "r" or opt == "R": return(4)
     elif opt == "t" or opt == "T":
         stat = input("\nRaise a stat? [ST]/10CP [DX]/20CP [IQ]/20CP [HT]/10CP [B]ack ")
@@ -681,6 +681,21 @@ Enter an amount to tithe, or go [b]ack. """)
                     PC.tempHP += heal
                     print(Fore.GREEN + f"Restored {heal} HP. You now have {PC.tempHP} HP remaining.")
                     return(2)
+    elif opt == "s" or opt == "S":
+        ask = input("Sell vendor [t]rash?")
+        if ask == "t" or ask == "T":
+            total = 0
+            for i in PC.inventory:
+                if i[0][2] == "trash":
+                    total = (i[1] * i[0][1])
+                    PC.SP += int(total)
+                    print(f"Gained {total} SP for {i[1]}x {i[0][0]}.")
+                    i.pop()
+                else:
+                    pass
+            print(f"You now have {PC.SP} SP.")
+        
+
 
                 
 def dungeonloop(PC):
@@ -689,7 +704,7 @@ def dungeonloop(PC):
     if opt == "r" or opt == "R": return(4)
     elif opt == "l" or opt == "L":
         drawLoot(PC, "treasure")
-        return(4)
+        return(3)
     floor = 1
     room = 0
 
