@@ -5,9 +5,10 @@ init(convert=True)
 
 gearL = {}
 mobL = {}
-#mobL - name, floor, stats, SM, weapon, armor, special loot[name, value], loot table
+#mobL - name, floor, stats, SM, weapon, armor
+#Adjust attack function to use SM
 mobT = []
-#mobT - name, level
+#mobT - name, level, special loot[name, value], loot table
 lootTabA = []
 lootTabW = []
 #Add claws as weapon, natural armor to armor table
@@ -195,6 +196,16 @@ def loadMobs():
         aTup = (x['ID'], x['floor'], x['spLoot'], x['lTab'])
         mobT.append(aTup)
     return(mobL)
+
+def wanderingMonster(floor=1):
+    select = []
+    for x in mobL['mobs']:
+        if x['floor'] == floor:
+            select.append(x['ID'])
+        else: pass
+    mob = random.choice(select)
+    ID = instMob(mob)
+    return(ID)
 
 def instMob(ID):
     for x in mobL['mobs']:
@@ -876,6 +887,8 @@ def explore(PC):
             
     elif ex == 19:
         print("Wandering monster!")
+        foe = wanderingMonster()
+        combatloop(PC, foe)
         #Need monsters, WM function
     elif ex == 20:
         print("Tricks or traps.")
@@ -911,5 +924,7 @@ rArmor = random.choice(gearL['armor'])
 equipArmor(test, rArmor['ID'])
 rWeap = random.choice(gearL['weapons'])
 equipWeapon(test, rWeap['ID'])
+
+#foe = wanderingMonster()
 
 #start()
