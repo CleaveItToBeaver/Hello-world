@@ -4,11 +4,17 @@ from colorama import Fore, Style, init
 init(convert=True)
 
 gearL = {}
+mobL = {}
+#mobL - name, floor, stats, SM, weapon, armor, special loot[name, value], loot table
+mobT = []
+#mobT - name, level
 lootTabA = []
 lootTabW = []
+#Add claws as weapon, natural armor to armor table
 lootTabT = []
+#Add useful treasure + master loot table, magic items
 
-class armor:
+class armor():
     DR = 0
     description = "Naked as the day you were born. You savage."
     weight = 0
@@ -16,7 +22,7 @@ class armor:
     name = "lack of"
     ID = "Naked"
 
-class mWep:
+class mWep():
     TL = 0
     name = "Melee Weapon"
     dmgSrc = "sw"
@@ -66,6 +72,7 @@ class baseHuman():
     shock = 0
     dead = 0
     defend = 1
+    SM = 0
 
     def __init__(self, DX = 10, HT = 10, IQ = 10, ST = 10):
         #print("Init running")
@@ -74,7 +81,7 @@ class baseHuman():
         self.speed = (DX + HT)/4
         self.maxHP = ST
         self.tempHP = self.maxHP
-        self.parry = 3 + (DX/2)
+        self.parry = 3 + int(DX/2)
         self.setDmg()
         self.move = int(self.speed)
 
@@ -175,6 +182,37 @@ def loadGear():
         aTup = (x['name'], x['value'], x['tag'])
         lootTabT.append(aTup)
     return(gearL)
+
+def loadMobs():
+    mobL = {}
+    with open('Mobs.txt') as infile:
+        mobL = json.load(infile)
+    infile.close()
+    y = 0
+    for x in mobL['mobs']:
+        y += 1
+        print(y)
+        aTup = (x['ID'], x['floor'], x['spLoot'], x['lTab'])
+        mobT.append(aTup)
+    return(mobL)
+
+def instMob(ID):
+    for x in mobL['mobs']:
+        if x["ID"] == str(ID):
+            print(x)
+            print("\n")
+            ID = baseHuman()
+            ID.name = x["name"]
+            ID.desc = x["desc"]
+            ID.ST = x["ST"]
+            ID.DX = x["DX"]
+            ID.IQ = x["IQ"]
+            ID.HT = x["HT"]
+            ID.floor = x["floor"]
+            equipWeapon(ID, x['weapon'])               
+            equipArmor(ID, x['armor'])
+        else: pass
+    return(ID)
 
 def equipArmor(target, ID):
 
@@ -352,7 +390,9 @@ def attack(char, skill, target, dType="N"):
     defence = 0
     dmg = 0
     tempdice = getattr(char, char.equippedWeapon.dmgSrc)
-    dice = tempdice
+    dice = []
+    dice.extend(tempdice)
+    print(dice)
     if dType == "s" or dType == "S":
         if dice[0] > 2:
             dice[1] += dice[0]
@@ -360,6 +400,7 @@ def attack(char, skill, target, dType="N"):
             dice[1] += 2
     else:
         pass
+    print(dice)
     if result == 2 and target.defend > 0:
         print(f"\n{target.name} attempts to defend!")
         if target.defend == 1:
@@ -472,7 +513,10 @@ Swaying, he raises his {foe.equippedWeapon.name}, and you ready your
             while status == 1:
                 foe.tempHP = foe.maxHP
                 foe.dead = 0
-                status = combatloop(PC, foe)
+                state = combatloop(PC, foe)
+                if state > 0:
+                    status = victory(PC, 'arena')
+                else: status = 0
 
         elif destination == "t" or destination == "T":
             status = 2
@@ -553,28 +597,31 @@ victorious. """)
                     enemy.defend = 0
             enemy.shock = 0                    
         if enemy.dead == 1:
-            state = victory(PC)
-            print(state)
-            return(state)
+            #state = victory(PC)
+            #print(state)
+            return(1)
+        elif PC.dead == 1:
+            return(0)
         else:
             turn += 1
 
-def victory(PC):
-    reward = random.randrange(20, 100)
-    print(f"""You are awarded {reward} silver pieces for your triumph.\n""")
-    PC.SP += reward
-    print(f"You now have {PC.SP} silver pieces.")
-    fight = input(f"You have {PC.tempHP} HP remaining. Face a new combatant? (Y/N)")
-    if fight == "Y" or fight == "y":
-        return(1)
-    else:
-        opt = input("[Q]uit, or [r]eturn from the arena? ")
-        if opt == "r" or opt == "R":
-            print("You leave the arena.")
-            return(4)
+def victory(PC, loc, enemy='none'):
+    if loc == 'arena':
+        reward = random.randrange(20, 100)
+        print(f"""You are awarded {reward} silver pieces for your triumph.\n""")
+        PC.SP += reward
+        print(f"You now have {PC.SP} silver pieces.")
+        fight = input(f"You have {PC.tempHP} HP remaining. Face a new combatant? (Y/N)")
+        if fight == "Y" or fight == "y":
+            return(1)
         else:
-            print("You retire to your chambers to rest and recouperate.")
-            return(0)
+            opt = input("[Q]uit, or [r]eturn from the arena? ")
+            if opt == "r" or opt == "R":
+                print("You leave the arena.")
+                return(4)
+            else:
+                print("You retire to your chambers to rest and recouperate.")
+                return(0)
 
 def townloop(PC):
     print(Style.RESET_ALL)
@@ -857,6 +904,7 @@ def dungeonloop(PC):
     
 
 gearL = loadGear()
+mobL = loadMobs()
 
 test = playerClass()
 rArmor = random.choice(gearL['armor'])
