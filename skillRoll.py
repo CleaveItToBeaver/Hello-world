@@ -6,12 +6,10 @@ init(convert=True)
 gearL = {}
 mobL = {}
 #mobL - name, floor, stats, SM, weapon, armor
-#Adjust attack function to use SM
 mobT = []
 #mobT - name, level, special loot[name, value], loot table
 lootTabA = []
 lootTabW = []
-#Add claws as weapon, natural armor to armor table
 lootTabT = []
 #Add useful treasure + master loot table, magic items
 
@@ -265,12 +263,12 @@ def equipWeapon(target, ID):
         else: pass
 #---------Loot Draw----------------
 def lootArmor():
-    loot = random.choices(lootTabA, [0, 35, 30, 15, 10, 5, 5])
+    loot = random.choices(lootTabA, [0, 0, 35, 30, 15, 10, 5, 5])
     #lootTable, Weights per list item
     return loot[0][0]
 
 def lootWeapon():
-    loot = random.choices(lootTabW, [0, 35, 30, 15, 10, 5, 5])
+    loot = random.choices(lootTabW, [0, 0, 0, 20, 20, 15, 10, 5, 5, 25])
     return loot[0][0]
 
 def lootTreasure():
@@ -282,10 +280,12 @@ def drawLoot(char, iT, level=1):
         item = lootArmor()
         index = [i for i, v in enumerate(lootTabA) if v[0] == item].pop()
         char.inventory.append([lootTabA[index], 1])
+        print(f"Found a {lootTabA[index][0]}!")
     elif iT == 'weapon':
         item = lootWeapon()
         index = [i for i, v in enumerate(lootTabW) if v[0] == item].pop()
         char.inventory.append([lootTabW[index], 1])
+        print(f"Found a {lootTabW[index][0]}!")
     elif iT == 'treasure':
         item = lootTreasure()
         index = [i for i, v in enumerate(lootTabT) if v[0] == item].pop()
@@ -391,7 +391,7 @@ def rollDmg(dice, modifier):
     
 def attack(char, skill, target, dType="N"):
     result = 0
-    mod = skill - char.shock
+    mod = skill - char.shock + target.SM
     if char.shock > 0:
         print(f"\n{char.name} attacks with -{char.shock} shock!")
     else:
@@ -552,7 +552,7 @@ def combatloop(PC, enemy):
             PC.defend = 1
             if PC.tempHP < 0:
                 saveMod = abs(int(PC.tempHP/PC.maxHP))
-                save = roll(PC.HT-saveMod) #
+                save = roll(PC.HT-saveMod)
                 if save < 2:
                     print("""You succumb to your wounds and lose consciousness.
 You collapse in the mud, beaten and ashamed. """)
@@ -608,8 +608,6 @@ victorious. """)
                     enemy.defend = 0
             enemy.shock = 0                    
         if enemy.dead == 1:
-            #state = victory(PC)
-            #print(state)
             return(1)
         elif PC.dead == 1:
             return(0)
@@ -633,6 +631,18 @@ def victory(PC, loc, enemy='none'):
             else:
                 print("You retire to your chambers to rest and recouperate.")
                 return(0)
+    elif loc == "dungeon":
+        if enemy == 'none':
+            pass
+        else:
+            for x in mobL['mobs']:
+                if enemy == x['name']:
+                    if x['spLoot'] != "None":
+                        PC.inventory.append(x['spLoot'])
+                    if x['spLoot'] == "None" and x['lTab'] != "None":
+                        drawLoot(PC, x['lTab'], PC.floor)
+                else: pass
+        
 
 def townloop(PC):
     print(Style.RESET_ALL)
@@ -766,8 +776,15 @@ def sidePassage(PC, ex):
     if c == "t" or c == "T":
         if passage != "":
             t = random.randrange(1, 21)
-            if t < 3: print("Wandering monster.")
-            elif t > 2 and t < 5: print("Trap!")
+            if t < 3:
+                print("Wandering monster.")
+                foe = wanderingMonster(PC.floor)
+                combatloop(PC, foe)
+                if foe.dead == 1:
+                    victory(PC, 'dungeon', foe.name)
+            elif t > 2 and t < 5:
+                print("Trap!")
+                trap(PC)
             elif t > 4 and t < 7: print("Valuable item!")
             else: print("Just a reflection from a shallow puddle.")
         else: print("You take the passage without incident.")
@@ -791,6 +808,13 @@ def door(PC):
                 print("You successfully breach the door.")
                 chamber(PC)
             else:
+                wm = random.randrange(1, 6)
+                if wm == 1:
+                    print("Wandering Monster")
+                    foe = wanderingMonster(PC.floor)
+                    combatloop(PC, foe)
+                    if foe.dead == 1:
+                        victory(PC, 'dungeon', foe.name)
                 c = input("The door sticks tight. [T]ry again, or [c]ontinue past?")
                 if c == "c" or c == "C":
                     bail = 1
@@ -806,17 +830,27 @@ def chamber(PC):
         #loot useful stuff? chance
     elif contents > 12 and contents < 15:
         print("Wandering Monster")
+        foe = wanderingMonster(PC.floor)
+        combatloop(PC, foe)
+        if foe.dead == 1:
+            victory(PC, 'dungeon', foe.name)
     elif contents > 14 and contents < 18:
         print("Treasure and monster!")
-        #monster stuff
+        foe = wanderingMonster(PC.floor)
+        combatloop(PC, foe)
+        if foe.dead == 1:
+            victory(PC, 'dungeon', foe.name)
         drawLoot(PC, "treasure", PC.floor)
     elif contents == 18:
         print("Treasure!")
+        t = random.randrange(1, 4)
+        if t == 1: trap(PC)
         drawLoot(PC, "treasure", PC.floor)
     elif contents == 19:
         print("Stairs!")
     elif contents == 20:
         print("Tricks and traps.")
+        trap(PC)
 
 def passageTurn(PC, ex):
     if ex%2 == 1:
@@ -826,8 +860,14 @@ def passageTurn(PC, ex):
     if c == "c" or c == "C":
         if passage != "":
             t = random.randrange(1, 21)
-            if t < 3: print("Wandering monster.")
-            elif t > 2 and t < 5: print("Trap!")
+            if t < 3:
+                print("Wandering monster.")
+                foe = wanderingMonster(PC.floor)
+                combatloop(PC, foe)
+                if foe.dead == 1:
+                    victory(PC, 'dungeon', foe.name)
+            elif t > 2 and t < 5:
+                trap(PC)
             elif t > 4 and t < 7: print("Valuable item!")
             else: print("Just a reflection from a shallow puddle.")
         else: print("You take the passage without incident.")
@@ -849,6 +889,7 @@ def explore(PC):
         print("This area looks familiar. You regain your bearings.")
         PC.lost = 0
         PC.room = 1
+        print(f"Lost = {PC.lost}\t Room = {PC.room}")
         
     if ex > 0 and ex < 3:
         passage(PC)
@@ -887,14 +928,30 @@ def explore(PC):
             
     elif ex == 19:
         print("Wandering monster!")
-        foe = wanderingMonster()
+        foe = wanderingMonster(PC.floor)
         combatloop(PC, foe)
+        if foe.dead == 1:
+            victory(PC, 'dungeon', foe.name)
         #Need monsters, WM function
     elif ex == 20:
         print("Tricks or traps.")
         #Need the poster
+        trap(PC)
     else:
         print("Oops! Rolled out of range.")
+
+def trap(PC):
+        print(f"A pressure plate sinks beneath your foot, and darts fly from the walls!")
+        darts = random.randrange(2, 4)
+        i = 0
+        foe = baseHuman()
+        foe.name = "Trap"
+        equipWeapon(foe, "fang")
+        PC.defend = 0
+        while i < darts:
+            attack(foe, 12, PC)
+            i += 1
+        PC.defend = 1
                 
 def dungeonloop(PC):
     print(Style.RESET_ALL)
@@ -911,8 +968,10 @@ def dungeonloop(PC):
         return(3)
     elif opt == "e" or opt == "E":
         explore(PC)
-        PC.room += 1
-        return(3)
+        if PC.dead == 1: return(0)
+        else:
+            PC.room += 1
+            return(3)
     
     
 
