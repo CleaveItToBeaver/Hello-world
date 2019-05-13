@@ -3,7 +3,17 @@ import json
 from colorama import Fore, Style, init
 init(convert=True)
 
-class armor:
+gearL = {}
+mobL = {}
+#mobL - name, floor, stats, SM, weapon, armor
+mobT = []
+#mobT - name, level, special loot[name, value], loot table
+lootTabA = []
+lootTabW = []
+lootTabT = []
+#Add useful treasure + master loot table, magic items
+
+class armor():
     DR = 0
     description = "Naked as the day you were born. You savage."
     weight = 0
@@ -11,7 +21,7 @@ class armor:
     name = "lack of"
     ID = "Naked"
 
-class mWep:
+class mWep():
     TL = 0
     name = "Melee Weapon"
     dmgSrc = "sw"
@@ -58,20 +68,19 @@ class baseHuman():
     HT = 10
     Thr = [1, -2]
     Sw = [1, 0]
-    CP = 0
-    SP = 0
     shock = 0
     dead = 0
     defend = 1
+    SM = 0
 
     def __init__(self, DX = 10, HT = 10, IQ = 10, ST = 10):
-        print("Init running")
+        #print("Init running")
         self.dead = 0
         self.dCheck = 0
         self.speed = (DX + HT)/4
         self.maxHP = ST
         self.tempHP = self.maxHP
-        self.parry = 3 + (DX/2)
+        self.parry = 3 + int(DX/2)
         self.setDmg()
         self.move = int(self.speed)
 
@@ -91,13 +100,13 @@ class baseHuman():
         
     @property
     def speed(self):
-        print("Getter running")
+        #print("Getter running")
         self._speed = (self.DX + self.HT)/4
         return(self._speed)
 
     @speed.setter
     def speed(self, value):
-        print("Setter running")
+        #print("Setter running")
         self._speed = (self.DX + self.HT) / 4
         return(self._speed)
 
@@ -137,15 +146,88 @@ class baseHuman():
             self._move = int(self.speed)
         return(self._move)
 
+class playerClass(baseHuman):
+    CP = 0
+    cuP = 0
+    SP = 0
+    GP = 0
+    EP = 0
+    PP = 0
+    inventory = []
+    lost = 0
+    pursued = 0
+    floor = 1
+    room = 0
 
+def loadGear():
+    gearL = {}
+    with open('loot.txt') as infile:
+        gearL = json.load(infile)
+    infile.close()
+    y = 0
+    for x in gearL['armor']:
+        y += 1
+        print(y)
+        aTup = (x['ID'], x['value'])
+        lootTabA.append(aTup)
+    for x in gearL['weapons']:
+        y += 1
+        print(y)
+        aTup = (x['ID'], x['cost'])
+        lootTabW.append(aTup)
+    for x in gearL['treasure']:
+        y += 1
+        print(y)
+        aTup = (x['name'], x['value'], x['tag'])
+        lootTabT.append(aTup)
+    return(gearL)
 
+def loadMobs():
+    mobL = {}
+    with open('Mobs.txt') as infile:
+        mobL = json.load(infile)
+    infile.close()
+    y = 0
+    for x in mobL['mobs']:
+        y += 1
+        print(y)
+        aTup = (x['ID'], x['floor'], x['spLoot'], x['lTab'])
+        mobT.append(aTup)
+    return(mobL)
+
+def wanderingMonster(floor=1):
+    select = []
+    for x in mobL['mobs']:
+        if x['floor'] == floor:
+            select.append(x['ID'])
+        else: pass
+    if select == []:
+        select = ['Rat']
+    mob = random.choice(select)
+    ID = instMob(mob)
+    return(ID)
+
+def instMob(ID):
+    for x in mobL['mobs']:
+        if x["ID"] == str(ID):
+            print(x)
+            print("\n")
+            ID = baseHuman()
+            ID.name = x["name"]
+            ID.desc = x["desc"]
+            ID.ST = x["ST"]
+            ID.DX = x["DX"]
+            ID.IQ = x["IQ"]
+            ID.HT = x["HT"]
+            ID.floor = x["floor"]
+            equipWeapon(ID, x['weapon'])               
+            equipArmor(ID, x['armor'])
+        else: pass
+    return(ID)
 
 def equipArmor(target, ID):
-    armorL = {}
-    with open('armor.txt') as infile:
-        armorL = json.load(infile)
 
-    for x in armorL['armor']:
+    for x in gearL['armor']:
         if x["ID"] == str(ID):
             print(x)
             print("\n")
@@ -158,14 +240,9 @@ def equipArmor(target, ID):
             ID.ID = x["ID"]                
             target.equippedArmor = ID
         else: pass
-    infile.close()
 
 def equipWeapon(target, ID):
-    weaponL = {}
-    with open('weapons.txt') as infile:
-        weaponL = json.load(infile)
-
-    for x in weaponL['weapons']:
+    for x in gearL['weapons']:
         if x["ID"] == str(ID):
             print(x)
             print("\n")
@@ -186,9 +263,84 @@ def equipWeapon(target, ID):
             ID.ID = x["ID"]
             target.equippedWeapon = ID
         else: pass
-    infile.close()
-    
+#---------Loot Draw----------------
+def lootArmor():
+    loot = random.choices(lootTabA, [0, 0, 35, 30, 15, 10, 5, 5])
+    #lootTable, Weights per list item
+    return loot[0][0]
 
+def lootWeapon():
+    loot = random.choices(lootTabW, [0, 0, 0, 20, 20, 15, 10, 5, 5, 25])
+    return loot[0][0]
+
+def lootTreasure():
+    loot = random.choices(lootTabT, [25, 25, 15, 15, 10, 4, 3, 3, 0, 0])
+    return loot[0][0]
+
+def drawLoot(char, iT, level=1):
+    if iT == 'armor':
+        item = lootArmor()
+        index = [i for i, v in enumerate(lootTabA) if v[0] == item].pop()
+        char.inventory.append([lootTabA[index], 1])
+        print(f"Found a {lootTabA[index][0]}!")
+    elif iT == 'weapon':
+        item = lootWeapon()
+        index = [i for i, v in enumerate(lootTabW) if v[0] == item].pop()
+        char.inventory.append([lootTabW[index], 1])
+        print(f"Found a {lootTabW[index][0]}!")
+    elif iT == 'treasure':
+        item = lootTreasure()
+        index = [i for i, v in enumerate(lootTabT) if v[0] == item].pop()
+        if lootTabT[index][0] == "CP":
+            char.cuP += 1000*level
+            print(f"Gained {1000*level} copper pieces!")
+        elif lootTabT[index][0] == "SP":
+            char.SP += 1000*level
+            print(f"Gained {1000*level} silver pieces!")
+        elif lootTabT[index][0] == "EP":
+            char.EP += 750*level
+            print(f"Gained {750*level} electrum pieces!")
+        elif lootTabT[index][0] == "GP":
+            char.GP += 250*level
+            print(f"Gained {250*level} gold pieces!")
+        elif lootTabT[index][0] == "PP":
+            char.PP += 100*level
+            print(f"Gained {100*level} platinum pieces!")
+        else:
+            item = lootTabT[index][0]
+            if item == "Gems":
+                y = 0
+                for i in range(level):
+                    x = random.randrange(1,5)
+                    y += x
+            elif item == "Jewelery":
+                y = level
+            else: y = 1
+            addLoot(index, y, char)
+            #else: char.inventory.append([lootTabT[index], 1])
+
+def addLoot(index, qty, char):
+    dupe = 0
+    item = lootTabT[index][0]
+    for i in char.inventory:
+        if i[0][0] == item:
+            i[1] += qty
+            dupe = 1
+        else:
+            pass
+    if dupe == 0:
+        char.inventory.append([lootTabT[index], qty])
+    print(f"Gained {qty} {lootTabT[index][0]}!")
+           
+#---------Loot End-----------------
+#---------Debug Functions----------
+def massLoot():
+	i = 0
+	while i < 10:
+		drawLoot(test, 'treasure')
+		i += 1
+#---------End Debug Functions------
+            
 def roll(skill):
     y = 0
     i = 0
@@ -243,23 +395,44 @@ def rollDmg(dice, modifier):
     return total
 
     
-def attack(char, skill, target):
-    mod = skill - char.shock
+def attack(char, skill, target, dType="N"):
+    result = 0
+    mod = skill - char.shock + target.SM
     if char.shock > 0:
-        print(f"{char.name} attacks with -{char.shock} shock!")
+        print(f"\n{char.name} attacks with -{char.shock} shock!")
+    else:
+        print(f"\n{char.name} attacks!")
     result = roll(mod)
+    print(f"Result: {result}")
     defence = 0
     dmg = 0
-    dice = getattr(char, char.equippedWeapon.dmgSrc)
-    if result == 2 and target.defend == 1:
-        print(f"{target.name} attempts to defend!")
-        defence = roll(target.parry)
+    tempdice = getattr(char, char.equippedWeapon.dmgSrc)
+    dice = []
+    dice.extend(tempdice)
+    print(dice)
+    if dType == "s" or dType == "S":
+        if dice[0] > 2:
+            dice[1] += dice[0]
+        else:
+            dice[1] += 2
+    else:
+        pass
+    print(dice)
+    if result == 2 and target.defend > 0:
+        print(f"\n{target.name} attempts to defend!")
+        if target.defend == 1:
+            defence = roll(target.parry)
+        elif target.defend == 2:
+            defence = roll(target.parry+2)
         if defence > 1:
             dmg = 0
             print(f"{target.name} fended off the attack!")
         else:
             dmg = rollDmg(dice[0], dice[1]+char.equippedWeapon.dmgMod)
             print(f"{char.name}'s {char.equippedWeapon.name} deals {dmg} damage!")
+    elif result == 2 and target.defend == 0:
+        dmg = rollDmg(dice[0], dice[1]+char.equippedWeapon.dmgMod)
+        print(f"{char.name}'s {char.equippedWeapon.name} deals {dmg} damage!")
     else:
         if result == 3:
             dmg = rollDmg(dice[0], dice[1]+char.equippedWeapon.dmgMod)
@@ -292,47 +465,57 @@ def attack(char, skill, target):
             print(f"Impaling weapons deal double damage after DR! ({dmg})")
         else:
             pass
-        target.tempHP -= dmg
-        if dmg > 4:
-            target.shock = 4
-        else:
-            target.shock = dmg
-        if target.tempHP <= (target.maxHP*-5):
+    target.tempHP -= dmg
+    if dmg > 4:
+        target.shock = 4
+    else:
+        target.shock = dmg
+    if target.tempHP <= (target.maxHP*-5):
+        target.dead = 1
+        print(f"{target.name} dies from extreme damage.")
+    elif target.tempHP <= 0 and abs(int(target.tempHP/target.maxHP)) > target.dCheck:
+        target.dCheck = abs(int(target.tempHP/target.maxHP))
+        print(f"{target.name} makes a Death Check at -{target.dCheck}:")
+        survival = roll(target.HT-target.dCheck)
+        if survival < 2:
             target.dead = 1
-            print(f"{target.name} dies from extreme damage.")
-        elif target.tempHP <= 0 and abs(int(target.tempHP/target.maxHP)) > target.dCheck:
-            target.dCheck = abs(int(target.tempHP/target.maxHP))
-            print(f"{target.name} makes a Death Check at -{target.dCheck}:")
-            survival = roll(target.HT-target.dCheck)
-            if survival < 2:
-                target.dead = 1
-                print(f"{target.name} succumbs to their wounds and perishes.")
+            print(f"{target.name} succumbs to their wounds and perishes.")
     print(Fore.YELLOW + f"{target.name} has {target.tempHP} HP.")
-    char.shock = 0
     print(Style.RESET_ALL)
 
 def start():
-    PC = baseHuman()
+    
+    PC = playerClass()
     foe = baseHuman()
     status = 1
     #Status 1 for arena, 2 for town, 3 for dungeon, 4 for menu. 0 ends the game.
-    
+
+    #Prime enemy
     foe.name = "Faceless thug"
+    print(f"Equipping {foe.name}'s armor")
+    rArmor = random.choice(gearL['armor'])
+    equipArmor(foe, rArmor['ID'])
+    
+    print(f"Equipping {foe.name}'s Weapon")
+    rWeap = random.choice(gearL['weapons'])
+    equipWeapon(foe, rWeap['ID'])
+    
+    #Prime Player
+    PC.name = input("What is your name? ")
+    PC.SP += 3200
+    PC.CP += 15
     print(f"Equipping {PC.name}'s Weapon")
     equipWeapon(PC, "rapier")
     print(f"Equipping {PC.name}'s Armor")
     equipArmor(PC, "Plate")
-    print(f"Equipping {foe.name}'s Weapon")
-    equipWeapon(foe, "Axe")
-    print(f"Equipping {foe.name}'s armor")
-    equipArmor(foe, "Leather")
-    
-    PC.name = input("What is your name? ")
-    PC.SP += 3200
-    PC.CP += 15
     
     while status != 0:
         print(Style.RESET_ALL)
+        PC.SP += (PC.cuP*.1) + (PC.EP/2) + (PC.GP*10) + (PC.PP*50)
+        PC.cuP = 0
+        PC.EP = 0
+        PC.GP = 0
+        PC.PP = 0
         destination = input("""\nWhere will you go? Into the [d]ungeons,
 to fight in the [a]rena, into [t]own, or [q]uit? """)
         if destination == "a" or destination == "A":
@@ -347,7 +530,10 @@ Swaying, he raises his {foe.equippedWeapon.name}, and you ready your
             while status == 1:
                 foe.tempHP = foe.maxHP
                 foe.dead = 0
-                status = combatloop(PC, foe)
+                state = combatloop(PC, foe)
+                if state > 0:
+                    status = victory(PC, 'arena')
+                else: status = 0
 
         elif destination == "t" or destination == "T":
             status = 2
@@ -356,6 +542,9 @@ Swaying, he raises his {foe.equippedWeapon.name}, and you ready your
 
         elif destination == "d" or destination == "D":
             status = 3
+            PC.floor = 1
+            PC.room = 0
+            PC.lost = 0
             while status == 3:
                 status = dungeonloop(PC)
                 
@@ -372,7 +561,7 @@ def combatloop(PC, enemy):
             PC.defend = 1
             if PC.tempHP < 0:
                 saveMod = abs(int(PC.tempHP/PC.maxHP))
-                save = roll(PC.HT-saveMod) #
+                save = roll(PC.HT-saveMod)
                 if save < 2:
                     print("""You succumb to your wounds and lose consciousness.
 You collapse in the mud, beaten and ashamed. """)
@@ -382,10 +571,32 @@ You collapse in the mud, beaten and ashamed. """)
             else:
                 fight = input("Continue attacking? (Y/N) ")
             if fight == "Y" or fight == "y":
-                attack(PC, PC.DX, enemy)
+                attType = input("""\n[N]ormal attack, [A]ll-Out Attack (no defence),
+All-Out [D]efend, or [R]eady an item? """)
+                if attType == "n" or attType == "N":
+                    attack(PC, PC.DX, enemy)
+                elif attType == "A" or attType == "a":
+                    PC.defend = 0
+                    aoa = input("""\n[D]etermined (+4 to hit);
+Dou[b]le (2 attacks with weapon that doesn't need to be readied,
+or dual wielded weapons);
+[S]trong (+2 dmg or +1/die, whichever is better) """)
+                    if aoa == "D" or aoa == "d":
+                        attack(PC, PC.DX+4, enemy)
+                    elif aoa == "b" or aoa == "B":
+                        attack(PC, PC.DX, enemy)
+                        attack(PC, PC.DX, enemy)
+                    elif aoa == "s" or aoa == "S":
+                        attack(PC, PC.DX, enemy, aoa)
+                elif attType == "d" or attType == "D":
+                    PC.defend = 2
+                elif attType == "r" or attType == "R":
+                    print("Currently does nothing. ")
+                    
             else:
                 print("You get away safely! (You coward.)")
                 return(0)
+            PC.shock = 0
         else:
             enemy.defend = 1
             if enemy.tempHP < 0:
@@ -397,35 +608,58 @@ You collapse in the mud, beaten and ashamed. """)
 victorious. """)
                     enemy.dead = 1
             if enemy.dead == 0:
-                attack(enemy, enemy.DX, PC)
+                AT = random.randrange(1, 50)
+                if AT < 30:
+                    attack(enemy, enemy.DX, PC)
+                else:
+                    print(f"{enemy.name} drops their guard and delivers a precise strike!")
+                    attack(enemy, enemy.DX+4, PC)
+                    enemy.defend = 0
+            enemy.shock = 0                    
         if enemy.dead == 1:
-            state = victory(PC)
-            print(state)
-            return(state)
+            return(1)
+        elif PC.dead == 1:
+            return(0)
         else:
             turn += 1
 
-def victory(PC):
-    reward = random.randrange(20, 100)
-    print(f"""You are awarded {reward} silver pieces for your triumph.\n""")
-    PC.SP += reward
-    print(f"You now have {PC.SP} silver pieces.")
-    fight = input(f"You have {PC.tempHP} HP remaining. Face a new combatant? (Y/N)")
-    if fight == "Y" or fight == "y":
-        return(1)
-    else:
-        opt = input("[Q]uit, or [r]eturn from the arena? ")
-        if opt == "r" or opt == "R":
-            print("You leave the arena.")
-            return(4)
+def victory(PC, loc, enemy='none'):
+    if loc == 'arena':
+        reward = random.randrange(20, 100)
+        print(f"""You are awarded {reward} silver pieces for your triumph.\n""")
+        PC.SP += reward
+        print(f"You now have {PC.SP} silver pieces.")
+        fight = input(f"You have {PC.tempHP} HP remaining. Face a new combatant? (Y/N)")
+        if fight == "Y" or fight == "y":
+            return(1)
         else:
-            print("You retire to your chambers to rest and recouperate.")
-            return(0)
+            opt = input("[Q]uit, or [r]eturn from the arena? ")
+            if opt == "r" or opt == "R":
+                print("You leave the arena.")
+                return(4)
+            else:
+                print("You retire to your chambers to rest and recouperate.")
+                return(0)
+    elif loc == "dungeon":
+        if enemy == 'none':
+            pass
+        else:
+            for x in mobL['mobs']:
+                if enemy == x['name']:
+                    if x['spLoot'] != "None":
+                        item = x['spLoot']
+                        index = [i for i, v in enumerate(lootTabT) if v[0] == item].pop()
+                        addLoot(index, int(x['spLootQty']), PC)
+                        print(f"You recover a {x['spLoot']} from the corpse!")
+                    if x['spLoot'] == "None" and x['lTab'] != "None":
+                        drawLoot(PC, x['lTab'], PC.floor)
+                else: pass
+        
 
 def townloop(PC):
     print(Style.RESET_ALL)
     opt = input("""Town is under construction. Pay for [h]ealing; [T]rain Stats;
-Buy [C]P;  Press [r] to return. """)
+Buy [C]P;  [S]ell loot; Press [r] to return. """)
     if opt == "r" or opt == "R": return(4)
     elif opt == "t" or opt == "T":
         stat = input("\nRaise a stat? [ST]/10CP [DX]/20CP [IQ]/20CP [HT]/10CP [B]ack ")
@@ -531,16 +765,335 @@ Enter an amount to tithe, or go [b]ack. """)
                     PC.tempHP += heal
                     print(Fore.GREEN + f"Restored {heal} HP. You now have {PC.tempHP} HP remaining.")
                     return(2)
+    elif opt == "s" or opt == "S":
+        ask = input("Sell vendor [t]rash?")
+        if ask == "t" or ask == "T":
+            total = 0
+            x = 0
+            toDel = []
+            for i in PC.inventory:
+                if i[0][2] == "trash":
+                    total = (i[1] * i[0][1])
+                    PC.SP += int(total)
+                    print(f"Gained {total} SP for {i[1]}x {i[0][0]}.")
+                    
+                    toDel.append(x)
+                else:
+                    pass
+                x += 1
+            #cleanup
+            toDel.reverse()
+            for i in toDel:
+                del PC.inventory[i]
+                print(i)
+            print(f"You now have {PC.SP} SP.")
 
+#--------Dungeon Rooms-----------        
+def sidePassage(PC, ex):
+    if ex%2 == 1:
+            passage = "There is a glint in the passage."
+    else: passage = ""
+    c = input(f"Side Passage. {passage} [C]ontinue past it, or [t]ake the passage?")
+    if c == "t" or c == "T":
+        if passage != "":
+            t = random.randrange(1, 21)
+            if t < 3:
+                print("Wandering monster.")
+                foe = wanderingMonster(PC.floor)
+                end = combatloop(PC, foe)
+                if end == 1:
+                    victory(PC, 'dungeon', foe.name)
+            elif t > 2 and t < 5:
+                print("Trap!")
+                trap(PC)
+            elif t > 4 and t < 7: print("Valuable item!")
+                #Add useful items here
+            else: print("Just a reflection from a shallow puddle.")
+        else: print("You take the passage without incident.")
+    elif c == "c" or c == "C": print("You continue forward safely.")
+
+def passage(PC):
+    print("The passage continues straight for 60 feet.")
+    if PC.lost > 0:
+        print("You feel like you're wandering in circles.")
+        PC.room = random.randrange(1, 11)
+
+def door(PC):
+    c = input("A locked door. [F]orce it, or [c]ontinue onward?")
+    if c == "c" or c == "C": print("You continue forward safely.")
+    elif c == "f" or c == "F":
+        force = 0
+        bail = 0
+        while force < 2 and bail < 1:
+            force = roll(PC.ST)
+            if force > 1:
+                print("You successfully breach the door.")
+                chamber(PC)
+            else:
+                wm = random.randrange(1, 6)
+                if wm == 1:
+                    print("Wandering Monster")
+                    foe = wanderingMonster(PC.floor)
+                    end = combatloop(PC, foe)
+                    if end == 1:
+                        victory(PC, 'dungeon', foe.name)
+                c = input("The door sticks tight. [T]ry again, or [c]ontinue past?")
+                if c == "c" or c == "C":
+                    bail = 1
+                    print("You continue forward safely.")
+                elif c == "t" or c == "T":
+                    bail = 0
+
+def chamber(PC):
+    print("Chamber/room.")
+    contents = random.randrange(1, 21)
+    if contents < 13:
+        print("This room is bare and its contents picked over.")
+        #loot useful stuff? chance
+    elif contents > 12 and contents < 15:
+        print("Wandering Monster")
+        foe = wanderingMonster(PC.floor)
+        end = combatloop(PC, foe)
+        if end == 1:
+            victory(PC, 'dungeon', foe.name)
+    elif contents > 14 and contents < 18:
+        print("Treasure and monster!")
+        #stealth check
+        foe = wanderingMonster(PC.floor)
+        end = combatloop(PC, foe)
+        if end == 1:
+            victory(PC, 'dungeon', foe.name)
+            drawLoot(PC, "treasure", PC.floor)
+    elif contents == 18:
+        print("Treasure!")
+        t = random.randrange(1, 4)
+        if t == 1: trap(PC)
+        drawLoot(PC, "treasure", PC.floor)
+    elif contents == 19:
+        print("Stairs!")
+    elif contents == 20:
+        print("Tricks and traps.")
+        trap(PC)
+
+def passageTurn(PC, ex):
+    if ex%2 == 1:
+            passage = "There is a glint in the passage."
+    else: passage = ""
+    c = input(f"The passage turns. {passage} [C]ontinue past it, or [b]acktrack?")
+    if c == "c" or c == "C":
+        if passage != "":
+            t = random.randrange(1, 21)
+            if t < 3:
+                print("Wandering monster.")
+                foe = wanderingMonster(PC.floor)
+                end = combatloop(PC, foe)
+                if end == 1:
+                    victory(PC, 'dungeon', foe.name)
+            elif t > 2 and t < 5:
+                trap(PC)
+            elif t > 4 and t < 7: print("Valuable item!")
+            else: print("Just a reflection from a shallow puddle.")
+        else: print("You take the passage without incident.")
+    elif c == "b" or c == "B":
+        backtrack = roll(PC.IQ-PC.room)
+        if backtrack > 1:
+            print("You make your way back.")
+            PC.room = 1
+        else:
+            print("Uh oh, this doesn't look right... You're lost.")
+            PC.lost = 1
+
+def stairs(PC):
+    var = random.randrange(1, 20)
+    appearance = ""
+    change = 0
+    chamber = 0
+    if var == 1 or var == 12:
+        appearance = "Stairs leading up. "
+        change = 1
+        result = "You take the stairs up to the next level. "
+    elif var > 1 and var < 7:
+        appearance = "Stairs leading down. "
+        change = -1
+        result = "You decend to the next level. "
+    elif var  == 7 or var == 13:
+        appearance = "Stairs leading down. "
+        change = -2
+        result = "You decend two levels. "
+    elif var == 8:
+        appearance = "Stairs leading down. "
+        change = -3
+        result = "You decend three levels. "
+    elif var == 9:
+        appearance = "Stairs leading up. "
+        chute = random.randrange(1, 6)
+        if chute == 1:
+            change = -2
+            result = """The stairs lead up to what appears to be a dead end, but
+as you turn back, a chute opens beneath you! You are deposited two levels down. """
+        else:
+            change = 0
+            result = "The stairs climb upwards, but the top is blocked by rubble. "
+    elif var == 10:
+        appearance = "Stairs leading down. "
+        chute = random.randrange(1, 6)
+        if chute == 1:
+            change = -1
+            result = """The stairs lead down to what appears to be a dead end, but
+as you turn back, a chute opens beneath you! You are deposited one level down. """
+        else:
+            change = 0
+            result = "The stairs decend into darkness, but the bottom is blocked by rubble. "
+    elif var == 11:
+        appearance = "Stairs leading up. "
+        chute = random.randrange(1, 6)
+        if chute == 1:
+            change = 1
+            result = """The stairs climb for nearly two levels, but a
+chute opens beneath you at the top, and you drop a level. """
+        else:
+            change = 2
+            result = "The stairs climb upwards for two levels. "
+    elif var > 13 and var < 17:
+        appearance = "A trapdoor in the floor. "
+        change = -1
+        result = "You decend an old iron ladder to the next level. "
+    elif var == 17:
+        appearance = "A trapdoor in the floor. "
+        change = -2
+        result = "You decend an old iron ladder two levels. "
+    elif var > 17:
+        appearance = "Stairs leading up. "
+        change = -1
+        result = """The stairs ascend a level, but upon cresting the top of the
+landing, retract into a slide and deposit you in a chamber two levels below. """
+        chamber = 1
+
+    
+    c = input(f"{appearance} [T]ake the stairs, or [c]ontinue past? ")
+    if c == "C" or c == "c":
+        print("You move past without incident. ")
+        #useful loot chance?
+    elif c == "t" or c == "T":
+        print("You take the stairs. ")
+        print(result)
+        PC.floor = PC.floor - change
+        print(f"You are now on level {PC.floor}.")
+        if chamber > 0:
+            chamber(PC)
+#--------End Dungeon Rooms--------
+
+def explore(PC):
+    ex = 0
+    ex = random.randrange(1, 21)
+    if PC.lost > 0: PC.room -= 1
+    if PC.lost > 0 and PC.room == 0:
+        print("This area looks familiar. You regain your bearings.")
+        PC.lost = 0
+        PC.room = 1
+        print(f"Lost = {PC.lost}\t Room = {PC.room}")
+        
+    if ex > 0 and ex < 3:
+        passage(PC)
+            
+    elif ex > 2 and ex < 8:
+        sidePassage(PC, ex)
+                  
+    elif ex > 7 and ex < 11:
+        door(PC)        
+        
+    elif ex > 10 and ex < 14:
+        chamber(PC)
+        
+    elif ex > 13 and ex < 17:
+        passageTurn(PC, ex)
+        
+    elif ex == 17:
+        back = input("Dead end. Gotta [b]acktrack.")
+        if back == "b" or back == "B":
+            backtrack = roll(PC.IQ-PC.room)
+            if backtrack > 1:
+                print("You make your way back.")
+                PC.room = 1
+            else:
+                print("Uh oh, this doesn't look right... You're lost.")
+                PC.lost = 1
+                
+    elif ex == 18:
+        stairs(PC)
+            
+    elif ex == 19:
+        print("Wandering monster!")
+        foe = wanderingMonster(PC.floor)
+        end = combatloop(PC, foe)
+        if end == 1:
+            victory(PC, 'dungeon', foe.name)
+        #Need monsters beyond floor 1
+    elif ex == 20:
+        print("Tricks or traps.")
+        #Need the poster
+        trap(PC)
+    else:
+        print("Oops! Rolled out of range.")
+
+def trap(PC):
+    choice = ''
+    spot = roll(PC.IQ)
+    #randomize triggers, hazards
+    darts = random.randrange(2, 4)
+    if spot > 1:
+        choice = input("You detect a trap! [D]isarm, or [e]vade it?")
+    if choice == 'e' or choice == 'E':
+        print("You gingerly step over the pressure plate, and leave the trap intact for the next unsuspecting soul.")
+        return
+    elif choice == 'D' or choice == 'd':
+        disarm = roll(PC.DX)
+        if disarm > 1:
+            print("You carefully dismantle the trigger mechanism and collect a few spare parts you could probably sell to a scrapper.")
+            addLoot(8, darts, PC)
+            return
+    print(f"A pressure plate sinks beneath your foot, and darts fly from the walls!")
+    
+    i = 0
+    foe = baseHuman()
+    foe.name = "Trap"
+    equipWeapon(foe, "fangs")
+    foe.equippedWeapon.name = "darts"
+    PC.defend = 0
+    while i < darts:
+        attack(foe, 12, PC)
+        i += 1
+    PC.defend = 1
                 
 def dungeonloop(PC):
     print(Style.RESET_ALL)
-    opt = input("Dungeon under construction. Press [r] to return.")
+    if PC.lost == 0:
+        opt = input("Dungeon under construction. [E]xplore the dungeon! Test [l]ooting. Press [r] to return.")
+    else:
+        opt = input("[E]xplore randomly, hoping to find your way back. ")
+        
     if opt == "r" or opt == "R": return(4)
-            
-test = baseHuman()
-equipArmor(test, "Cloth")
-equipWeapon(test, "poleaxe")
-#test.equippedArmor = cloth
-#test.equippedWeapon = club
-start()
+    elif opt == "l" or opt == "L":
+        drawLoot(PC, "treasure")
+        return(3)
+    elif opt == "e" or opt == "E":
+        explore(PC)
+        if PC.dead == 1: return(0)
+        else:
+            PC.room += 1
+            return(3)
+    
+    
+
+gearL = loadGear()
+mobL = loadMobs()
+
+test = playerClass()
+rArmor = random.choice(gearL['armor'])
+equipArmor(test, rArmor['ID'])
+rWeap = random.choice(gearL['weapons'])
+equipWeapon(test, rWeap['ID'])
+
+#foe = wanderingMonster()
+
+#start()
