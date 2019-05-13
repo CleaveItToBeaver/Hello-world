@@ -7,7 +7,7 @@ Next goals on the chopping block:
 	[X]*Loop variation - next combatant, town functions
 	[X]*HT-based Death checks
 	*Stun
-	*Attack Options
+	[X]*Attack Options
 	*Defensive Options
 	*Treasure tables
 	[X]*"Training" - purchasing CP with accumulated silver
@@ -16,5 +16,5 @@ Next goals on the chopping block:
 	*Conditions (prone, wounded, etc)
 	*Limbs?
 	*Dungeon Generation + exploration loop using roll(skill) function
-	*Inventory system - probably a dict[] or list referencing class instances?
+	[X]*Inventory system - probably a dict[] or list referencing class instances?
 	*Randomized arena enemy loadouts
