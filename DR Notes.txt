@@ -45,3 +45,102 @@ Wandering monster:
 Instantiate from dict as baseHuman()
 monster = baseHuman() works fine, then pull stats from the dict
 DX = mon['DX'], etc
+
+USEFUL ITEMS TABLE Roll d100. Next to each item is the
+value you can get from selling it.
+1-5: Roll on Useless Items table
+6-50: Nothing
+51-57: Furniture: break it to make a bludgeon (does 1d6 damage,
+worth 1 gp), or take it home (worth 20 gp, Heavy)
+58-59: Dagger (1d4 damage) worth 2gp
+60-61: Sword (1d8 damage) 8gp
+62-63: Leather armor (+2 ac) 3gp
+64-65: Shield (+1 ac) 5gp
+66-67: Chain mail (+4 ac) 40gp
+68: Plate mail (+6 ac) 200 gp
+69-71: Food (in town, you may eat it and heal 10 HP) 30gp
+72-83: Coins. 1d20 GP
+84-85: Statue (Heavy) 100gp
+86-87: 1-4 jars of oil: can be used to make attack that does 2d6
+damage or can be thrown behind to stop pursuit. 10gp each
+88-89: Bedroom: heal 1 hp, clerics/wizards can re-memorize spells.
+90-91: Sack: to hold treasure. 1gp
+92-93: Whip: In combat, you can use this as a weapon. On a hit, the
+creature takes no damage, but you steal its weapon. Unarmed
+creatures do 1 damage on every hit. 3gp
+94: 10' pole: +1 to avoid pits. 1gp
+95: Healing potion: heals 1d8 hp. 100gp
+96-99: roll on Valuable Items table
+00: roll on Magic Items table
+
+USELESS ITEMS TABLE Roll d6.
+1: Bad art: Heavy. You are convinced it is worth 500 GP and will carry
+it in preference to any Heavy treasure of lesser value. You will only
+drop it if you are fleeing from a monster; while carrying it, you will
+not flee if you are at full health. If you get it out of the dungeon,
+you'll be unable to sell it. Still, you're convinced it's a masterpiece.
+You'll keep it in your house, and no one will ever appreciate it like
+you do. High Wisdom: You recognize this item as worthless and
+leave it where it is.
+2: Moldy clothes: When you pick them up, you must save or take
+1d4 damage. High Constitution: no damage. 1gp
+3: Flawed sword: it does 1d8 damage, and breaks the first time you
+hit with it. Worth 1gp.
+4: Spoiled food: You can only throw away spoiled food if you're
+being pursued by a nonintelligent monster. If you leave the dungeon
+with it, you get sick and spend a month in bed (-30gp), during which
+time you will not heal. High wisdom: You recognize this food as
+spoiled and leave it where it is. Worth 0gp.
+5: 1d20 cp.
+6: 1d20 sp
+
+VALUABLE ITEMS TABLE Roll d10.
+1: Plate armor (+6 ac) 200gp
+2: Healing potion: heals 1d8 hp 100gp
+3: Holy symbol: allow you to Turn undead instead of attacking them
+(they must roll 11+ or flee) 25gp
+4: Van Helsing kit: mallet and stakes, wolfsbane, mirror. For you,
+werewolf, vampire, and medusa have AC 10 and 1 HP. 75gp
+5: +1 dagger (adds 1 to attack roll, 1d4+1 damage) 500gp
+6: Cleric scroll - see Magic Items 150gp
+7: Wizard scroll - see Magic Items 150gp
+8: Gold statue: Worth 100 GP times the level it's found on. Heavy.
+9: Treasure. Roll on Treasure table.
+10: Magic item. roll on Magic Items table.
+
+MAGIC ITEM TABLE Roll d20.
+1: +1 sword (adds 1 to attack roll, 1d8+1 damage) 1000gp
+2: +1 mace (bludgeon, adds 1 to attack roll, 1d6+1 damage) 750gp
+3: +1 leather armor (+3 AC) 1000gp
+4: +1 plate armor (+7 AC) 2000gp
+5-6: wizard scroll: roll 1d4 to determine the spell. 1) sleep
+(automatically defeats any creature of level 4 or lower), 2) charm
+(intelligent creature must make saving throw or become your
+henchman), 3) magic missile (automatically do 1d4+1 damage with
+no attack roll), 4) haste (caster or caster's henchman may make two
+attacks per turn until the end of the battle; fleeing is automatically
+successful). Scroll value 150gp.
+7-8: cleric scroll: roll 1d6 to determine the spell. 1-3) cure light
+wounds (heal 1d8 points of damage), 4) sanctuary (enemies must
+make successful saving throw to attack you; ends when combat
+ends), 5) command (intelligent creatures may be ordered to sleep
+or flee; level 6 or higher creatures get a saving throw), 6) animate
+dead (gives you a skeleton as a henchman).
+9-10: 1d4 healing potions, heal 1d8 hp, 100gp each
+11: cursed weapon that seems to be +1 version of your current
+weapon. Unless you have a magic weapon already, you must use it
+until you leave the dungeon. -1 to hit and damage. 0gp.
+12: bracers: +4 AC, cannot be worn with armor. 1500gp
+13: wand of magic missile: does 1d4+1 damage, breaks on a 1, hits
+on a 2-20. 500gp
+14 gauntlets of ogre power: gives high strength. 750gp
+15 boots of elvenkind: +1 sneak. 500gp
+16 potion of treasure finding: next opportunity, roll on treasure
+table instead of useful item table. 500gp.
+17 ring of invisibility: +2 sneak. 2000gp
+18 ring of protection: +1 AC. 750gp
+19 potion of speed: has the same effect as a Haste spell (see Wizard
+Scrolls). 100gp
+20 libram of improvement: roll d6, improve that attribute. The book
+is consumed. If you are already high in that attribute, the book is not
+consumed, and you can sell it instead. 750gp
