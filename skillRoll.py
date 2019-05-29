@@ -276,14 +276,14 @@ def lootTreasure():
     loot = random.choices(lootTabT, [25, 25, 15, 15, 10, 4, 3, 3, 0, 0])
     return loot[0][0]
 
-def drawLoot(char, iT, level=1):
+def drawLoot(char, iT, level=1, item=""):
     if iT == 'armor':
-        item = lootArmor()
+        if item == '': item = lootArmor()
         index = [i for i, v in enumerate(lootTabA) if v[0] == item].pop()
         char.inventory.append([lootTabA[index], 1])
         print(Fore.YELLOW +f"Found a {lootTabA[index][0]}!")
     elif iT == 'weapon':
-        item = lootWeapon()
+        if item == '': item = lootWeapon()
         index = [i for i, v in enumerate(lootTabW) if v[0] == item].pop()
         char.inventory.append([lootTabW[index], 1])
         print(Fore.YELLOW +f"Found a {lootTabW[index][0]}!")
@@ -1148,4 +1148,57 @@ equipWeapon(test, rWeap['ID'])
 
 #foe = wanderingMonster()
 
-start()
+#start()
+#------------Test stuff for Inventory---------------
+def generateMenu():
+	for i, each in enumerate(gearL['armor']):	
+		tup = (i, each['name'])
+		menu.append(tup)
+	return menu
+
+def menuSelect():
+	for each in menu:
+		print(f'{each[0]} - {each[1]}')
+	select = input('Enter the number of your selection: ')
+	choice = menu[int(select)][1]
+	print(f'You chose {choice}.')
+
+#-------------End Test Stuff for Inventory----------
+
+def intinv(char):
+    a = input("Do what? Equip [a]rmor, [w]eild weapon, or [u]se an item?")
+    if a.lower() == 'a': name = 'armor'
+    elif a.lower() == 'w': name = 'weapon'
+    elif a.lower() == 'u': name = 'item'
+    print(name)
+    print(type(name))
+    i = 1
+    menu = []
+    
+    for v, each in enumerate(char.inventory):
+        print(each[0][2])
+        print(type(each[0][2]))
+        if each[0][2] == name:
+            tup = (i, each[0][0], v)
+            menu.append(tup)
+            i += 1
+            
+    for each in menu:
+        print(f'{each[0]} - {each[1]}')
+        
+    select = input('Enter the number of your selection: ')
+    choice = menu[int(select)-1][1]
+    if name == 'armor':
+        drawLoot(char, 'armor', item = char.equippedArmor.ID)
+        equipArmor(char, choice)
+        print(menu[int(select)-1])
+        toDel = menu[int(select)-1][2]
+        print(f'ToDel = {toDel}')
+        del char.inventory[toDel]
+    elif name == 'weapon':
+        drawLoot(char, 'weapon', item = char.equippedWeapon.ID)
+        equipWeapon(char, choice)
+        print(menu[int(select)-1])
+        toDel = menu[int(select)-1][2]
+        print(f'ToDel = {toDel}')
+        del char.inventory[toDel]
