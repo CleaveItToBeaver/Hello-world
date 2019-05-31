@@ -428,7 +428,7 @@ def attack(char, skill, target, dType="N"):
     dice = []
     dice.extend(tempdice)
     print(dice)
-    if dType == "s" or dType == "S":
+    if dType.lower() == "s":
         if dice[0] > 2:
             dice[1] += dice[0]
         else:
@@ -460,6 +460,7 @@ def attack(char, skill, target, dType="N"):
             print(f"{char.name}'s {char.equippedWeapon.name} deals {dmg} damage!")
         elif result == 1:
             print("Whiff! No damage dealt.")
+            #Crit Fail Chart
         elif result == 0:
             print("""Eventually, we'll have a crit fail chart for this.
             For now, you just suck.""")
@@ -535,8 +536,8 @@ def start():
         PC.GP = 0
         PC.PP = 0
         destination = input("""\nWhere will you go? Into the [d]ungeons,
-to fight in the [a]rena, into [t]own, or [q]uit? """)
-        if destination == "a" or destination == "A":
+to fight in the [a]rena, into [t]own, equip from [i]nventory, or [q]uit? """)
+        if destination.lower() == "a":
             status = 1
             print("""\nYou decend into a large circular fighting ring, set into the
 ground and walled with upright sharpened posts. There is a heavy
@@ -553,20 +554,23 @@ Swaying, he raises his {foe.equippedWeapon.name}, and you ready your
                     status = victory(PC, 'arena')
                 else: status = 0
 
-        elif destination == "t" or destination == "T":
+        elif destination.lower() == "t":
             status = 2
             while status == 2:
                 status = townloop(PC)
 
-        elif destination == "d" or destination == "D":
+        elif destination.lower() == "d":
             status = 3
             PC.floor = 1
             PC.room = 0
             PC.lost = 0
             while status == 3:
                 status = dungeonloop(PC)
+
+        elif destination.lower() == 'i':
+            intinv(PC)
                 
-        elif destination == "q" or destination == "Q":
+        elif destination.lower() == "q":
             print("You retire for the time being.")
             status = 0
 
@@ -589,32 +593,32 @@ You collapse in the mud, beaten and ashamed. """)
                 fight = input("Attack? (Y/N)")
             else:
                 fight = input("Continue attacking? (Y/N) ")
-            if fight == "Y" or fight == "y":
+            if fight.lower() == "y":
                 attType = input("""\n[N]ormal attack, [A]ll-Out Attack (no defence),
 All-Out [D]efend, or [R]eady an item? """)
-                if attType == "n" or attType == "N":
+                if attType.lower() == "n":
                     attack(PC, PC.DX, enemy)
-                elif attType == "A" or attType == "a":
+                elif attType == "a":
                     PC.defend = 0
                     aoa = input("""\n[D]etermined (+4 to hit);
 Dou[b]le (2 attacks with weapon that doesn't need to be readied,
 or dual wielded weapons);
 [S]trong (+2 dmg or +1/die, whichever is better) """)
-                    if aoa == "D" or aoa == "d":
+                    if aoa.lower() == "d":
                         attack(PC, PC.DX+4, enemy)
-                    elif aoa == "b" or aoa == "B":
+                    elif aoa.lower() == "b":
                         attack(PC, PC.DX, enemy)
                         attack(PC, PC.DX, enemy)
-                    elif aoa == "s" or aoa == "S":
+                    elif aoa.lower() == "s":
                         attack(PC, PC.DX, enemy, aoa)
-                elif attType == "d" or attType == "D":
+                elif attType.lower() == "d":
                     PC.defend = 2
-                elif attType == "r" or attType == "R":
+                elif attType.lower() == "r":
                     print("Currently does nothing. ")
                     
             else:
                 run = input("Really run away? Y/N ")
-                if run == 'y' or run == 'Y':
+                if run.lower() == 'y':
                     chk = contest(PC.HT, enemy.HT)
                     if chk == 1:
                         print("You get away safely! (You coward.)")
@@ -655,11 +659,11 @@ def victory(PC, loc, enemy='none'):
         PC.SP += reward
         print(f"You now have {PC.SP} silver pieces.")
         fight = input(f"You have {PC.tempHP} HP remaining. Face a new combatant? (Y/N)")
-        if fight == "Y" or fight == "y":
+        if fight.lower() == "y":
             return(1)
         else:
             opt = input("[Q]uit, or [r]eturn from the arena? ")
-            if opt == "r" or opt == "R":
+            if opt.lower() == "r":
                 print("You leave the arena.")
                 return(4)
             else:
@@ -684,13 +688,16 @@ def victory(PC, loc, enemy='none'):
 def townloop(PC):
     print(Style.RESET_ALL)
     opt = input("""Town is under construction. Pay for [h]ealing; [T]rain Stats;
-Buy [C]P;  [S]ell loot; Press [r] to return. """)
-    if opt == "r" or opt == "R": return(4)
-    elif opt == "t" or opt == "T":
+Buy [C]P;  [S]ell loot; Equip from [i]nventory; Press [r] to return. """)
+    if opt.lower() == "r": return(4)
+    elif opt.lower() == 'i':
+        intinv(PC)
+        return(2)
+    elif opt.lower() == "t":
         stat = input("\nRaise a stat? [ST]/10CP [DX]/20CP [IQ]/20CP [HT]/10CP [B]ack ")
         if stat == "b" or stat == "B":
             return(2)
-        elif stat == "ST" or stat == "st":
+        elif stat.lower() == "st":
             if (PC.CP - 10) >= 0:
                 PC.CP -= 10
                 PC.ST += 1
@@ -701,7 +708,7 @@ Buy [C]P;  [S]ell loot; Press [r] to return. """)
                 deficit = abs(PC.CP-10)
                 print(f"Sorry, you need {deficit} more CP to advance this stat.")
                 return(2)
-        elif stat == "DX" or stat == "dx":
+        elif stat.lower() == "dx":
             if (PC.CP - 20) >= 0:
                 PC.CP -= 20
                 PC.DX += 1
@@ -711,7 +718,7 @@ Buy [C]P;  [S]ell loot; Press [r] to return. """)
                 deficit = abs(PC.CP-20)
                 print(f"Sorry, you need {deficit} more CP to advance this stat.")
                 return(2)
-        elif stat == "IQ" or stat == "iq":
+        elif stat.lower() == "iq":
             if (PC.CP - 20) >= 0:
                 PC.CP -= 20
                 PC.IQ += 1
@@ -721,7 +728,7 @@ Buy [C]P;  [S]ell loot; Press [r] to return. """)
                 deficit = abs(PC.CP-20)
                 print(f"Sorry, you need {deficit} more CP to advance this stat.")
                 return(2)
-        elif stat == "HT" or stat == "ht":
+        elif stat.lower() == "ht":
             if (PC.CP - 10) >= 0:
                 PC.CP -= 10
                 PC.HT += 1
@@ -734,7 +741,7 @@ Buy [C]P;  [S]ell loot; Press [r] to return. """)
         else:
             print("Enter a valid menu option. ")
             return(2)
-    elif opt == "C" or opt == "c":
+    elif opt.lower() == "c":
         buy = input(f"""\nCP (character points) can be purchased for 1000 silver pieces each. You 
 currently have {PC.SP} silver pieces.\n Enter an amount to purchase,or go [b]ack. """)
         if (buy.isdigit()):
@@ -749,9 +756,9 @@ SP remaining.\n""")
                 deficit = abs(PC.SP-(buy*1000))
                 print(Fore.RED + f"You require {deficit} more silver.")
                 return(2)
-        elif buy == "b" or buy == "B":
+        elif buy.lower() == "b":
             return(2)
-    elif opt == "h" or opt =="H":
+    elif opt.lower() == "h":
         print("\nA local cleric performs healing spells in exchange for a generous tithe. (10SP/1HP)")
         heal = input("Enter the number of HP to restore, [F] to heal to max, or go [b]ack. ")
         if (heal.isdigit()):
@@ -774,7 +781,7 @@ Enter an amount to tithe, or go [b]ack. """)
                     PC.SP -= abs(tithe)
                     print("\nThe Church thanks you for your generosity.")
                     return(2)
-                elif tithe == "b" or tithe == "B":
+                elif tithe.lower() == "b":
                     return(2)
             elif (PC.maxHP - PC.tempHP) < heal:
                 heal = PC.maxHP - PC.tempHP
@@ -783,16 +790,16 @@ Enter an amount to tithe, or go [b]ack. """)
                     PC.tempHP += heal
                     print(Fore.GREEN + f"Restored {heal} HP. You now have {PC.tempHP} HP remaining.")
                     return(2)
-        elif heal == "f" or heal == "F":
+        elif heal.lower() == "f":
                 heal = PC.maxHP - PC.tempHP
                 if PC.SP - (heal*10) >= 0:
                     PC.SP -= (heal*10)
                     PC.tempHP += heal
                     print(Fore.GREEN + f"Restored {heal} HP. You now have {PC.tempHP} HP remaining.")
                     return(2)
-    elif opt == "s" or opt == "S":
+    elif opt.lower() == "s":
         ask = input("Sell vendor [t]rash?")
-        if ask == "t" or ask == "T":
+        if ask.lower() == "t":
             total = 0
             x = 0
             toDel = []
@@ -819,7 +826,7 @@ def sidePassage(PC, ex):
             passage = "There is a glint in the passage."
     else: passage = ""
     c = input(f"Side Passage. {passage} [C]ontinue past it, or [t]ake the passage?")
-    if c == "t" or c == "T":
+    if c.lower() == "t":
         if passage != "":
             t = random.randrange(1, 21)
             if t < 3:
@@ -835,7 +842,7 @@ def sidePassage(PC, ex):
                 #Add useful items here
             else: print("Just a reflection from a shallow puddle.")
         else: print("You take the passage without incident.")
-    elif c == "c" or c == "C": print("You continue forward safely.")
+    elif c.lower() == "c": print("You continue forward safely.")
 
 def passage(PC):
     print("The passage continues straight for 60 feet.")
@@ -845,8 +852,8 @@ def passage(PC):
 
 def door(PC):
     c = input("A locked door. [F]orce it, or [c]ontinue onward?")
-    if c == "c" or c == "C": print("You continue forward safely.")
-    elif c == "f" or c == "F":
+    if c.lower() == "c": print("You continue forward safely.")
+    elif c.lower() == "f":
         force = 0
         bail = 0
         while force < 2 and bail < 1:
@@ -863,10 +870,10 @@ def door(PC):
                     if end == 1:
                         victory(PC, 'dungeon', foe.name)
                 c = input("The door sticks tight. [T]ry again, or [c]ontinue past?")
-                if c == "c" or c == "C":
+                if c.lower() == "c":
                     bail = 1
                     print("You continue forward safely.")
-                elif c == "t" or c == "T":
+                elif c.lower() == "t":
                     bail = 0
 
 def chamber(PC):
@@ -905,7 +912,7 @@ def passageTurn(PC, ex):
             passage = "There is a glint in the passage."
     else: passage = ""
     c = input(f"The passage turns. {passage} [C]ontinue past it, or [b]acktrack?")
-    if c == "c" or c == "C":
+    if c.lower() == "c":
         if passage != "":
             t = random.randrange(1, 21)
             if t < 3:
@@ -919,7 +926,7 @@ def passageTurn(PC, ex):
             elif t > 4 and t < 7: print("Valuable item!")
             else: print("Just a reflection from a shallow puddle.")
         else: print("You take the passage without incident.")
-    elif c == "b" or c == "B":
+    elif c.lower() == "b":
         backtrack = roll(PC.IQ-(PC.room-1))[0]
         if backtrack > 1:
             print("You make your way back.")
@@ -996,10 +1003,10 @@ landing, retract into a slide and deposit you in a chamber two levels below. """
 
     
     c = input(f"{appearance} [T]ake the stairs, or [c]ontinue past? ")
-    if c == "C" or c == "c":
+    if c.lower() == "c":
         print("You move past without incident. ")
         #useful loot chance?
-    elif c == "t" or c == "T":
+    elif c.lower() == "t":
         print("You take the stairs. ")
         print(result)
         PC.floor = PC.floor - change
@@ -1036,7 +1043,7 @@ def explore(PC):
         
     elif ex == 17:
         back = input("Dead end. Gotta [b]acktrack.")
-        if back == "b" or back == "B":
+        if back.lower() == "b":
             backtrack = roll(PC.IQ-(PC.room-1))[0]
             if backtrack > 1:
                 print("You make your way back.")
@@ -1070,10 +1077,10 @@ def trap(PC):
     if spot > 1:
         choice = input("You detect a trap! [D]isarm, or [e]vade it?")
     else: PC.defend = 0
-    if choice == 'e' or choice == 'E':
+    if choice.lower() == 'e':
         print("You gingerly step over the pressure plate, and leave the trap intact for the next unsuspecting soul.")
         return
-    elif choice == 'D' or choice == 'd':
+    elif choice.lower() == 'd':
         disarm = roll(PC.DX)[0]
         if disarm > 1:
             print("You carefully dismantle the trigger mechanism and collect a few spare parts you could probably sell to a scrapper.")
@@ -1095,31 +1102,35 @@ def dungeonloop(PC):
     print(Style.RESET_ALL)
     print(f"Lost = {PC.lost}\t Room = {PC.room}")
     if PC.lost == 0 and PC.room == 0:
-        opt = input("Dungeon under construction. [E]xplore the dungeon! Test [l]ooting. Press [r] to return.")
-        if opt == "r" or opt == "R": return(4)
-        elif opt == "l" or opt == "L":
+        opt = input("Dungeon under construction. [E]xplore the dungeon! "
+            "Test [l]ooting. Equip from [i]nventory. Press [r] to return.")
+        if opt.lower() == "r": return(4)
+        elif opt.lower() == "l":
             drawLoot(PC, "treasure")
             return(3)
-        elif opt == "e" or opt == "E":
+        elif opt.lower() == 'i':
+            intinv(PC)
+            return(3)
+        elif opt.lower() == "e":
             explore(PC)
             if PC.dead == 1: return(0)
             else:
                 return(3)
     elif PC.lost > 0:
         opt = input("[E]xplore randomly, hoping to find your way back. ")
-        if opt == "e" or opt == "E":
+        if opt.lower() == "e":
             explore(PC)
             if PC.dead == 1: return(0)
             else:
                 return(3)
     elif PC.room > 0 and PC.lost == 0:
         opt = input("Dungeon under construction. [E]xplore the dungeon! [B]acktrack.")
-        if opt == "e" or opt == "E":
+        if opt.lower() == "e":
             explore(PC)
             if PC.dead == 1: return(0)
             else:
                 return(3)
-        elif opt == "b" or opt == "B":
+        elif opt.lower() == "b":
             if PC.room > 1:
                 backtrack = roll(PC.IQ-(PC.room-1))[0]
                 if backtrack > 1:
@@ -1166,7 +1177,7 @@ def menuSelect():
 #-------------End Test Stuff for Inventory----------
 
 def intinv(char):
-    a = input("Do what? Equip [a]rmor, [w]eild weapon, or [u]se an item?")
+    a = input("Do what? Equip [a]rmor, [w]ield weapon, or [u]se an item?")
     if a.lower() == 'a': name = 'armor'
     elif a.lower() == 'w': name = 'weapon'
     elif a.lower() == 'u': name = 'item'
@@ -1176,8 +1187,6 @@ def intinv(char):
     menu = []
     
     for v, each in enumerate(char.inventory):
-        print(each[0][2])
-        print(type(each[0][2]))
         if each[0][2] == name:
             tup = (i, each[0][0], v)
             menu.append(tup)
@@ -1185,6 +1194,10 @@ def intinv(char):
             
     for each in menu:
         print(f'{each[0]} - {each[1]}')
+
+    if menu == []:
+        print(f'No useable {name} in your inventory!')
+        return
         
     select = input('Enter the number of your selection: ')
     choice = menu[int(select)-1][1]
