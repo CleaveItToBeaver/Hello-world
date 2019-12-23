@@ -161,7 +161,7 @@ class playerClass(baseHuman):
 
 def loadGear():
     gearL = {}
-    with open('loot.txt') as infile:
+    with open('loot.json') as infile:
         gearL = json.load(infile)
     infile.close()
     y = 0
@@ -530,11 +530,8 @@ def start():
     
     while status != 0:
         print(Style.RESET_ALL)
-        PC.SP += (PC.cuP*.1) + (PC.EP/2) + (PC.GP*10) + (PC.PP*50)
-        PC.cuP = 0
-        PC.EP = 0
-        PC.GP = 0
-        PC.PP = 0
+        normalizeCurrency(PC)
+        
         destination = input("""\nWhere will you go? Into the [d]ungeons,
 to fight in the [a]rena, into [t]own, equip from [i]nventory, or [q]uit? """)
         if destination.lower() == "a":
@@ -573,6 +570,13 @@ Swaying, he raises his {foe.equippedWeapon.name}, and you ready your
         elif destination.lower() == "q":
             print("You retire for the time being.")
             status = 0
+
+def normalizeCurrency(PC):
+    PC.SP += (PC.cuP*.1) + (PC.EP/2) + (PC.GP*10) + (PC.PP*50)
+    PC.cuP = 0
+    PC.EP = 0
+    PC.GP = 0
+    PC.PP = 0
 
 def combatloop(PC, enemy):
     turn = 1
@@ -614,6 +618,11 @@ or dual wielded weapons);
                 elif attType.lower() == "d":
                     PC.defend = 2
                 elif attType.lower() == "r":
+                    ready = input("[R]eady your weapon, or [a]ccess your inventory?")
+                    if ready.lower() == "r":
+                        print("You ready your weapon.")
+                    elif ready.lower() == "a":
+                        intinv(PC)
                     print("Currently does nothing. ")
                     
             else:
@@ -923,7 +932,7 @@ def passageTurn(PC, ex):
                     victory(PC, 'dungeon', foe.name)
             elif t > 2 and t < 5:
                 trap(PC)
-            elif t > 4 and t < 7: print("Valuable item!")
+            elif t > 4 and t < 7: print("Valuable item!") #Draw valuable item
             else: print("Just a reflection from a shallow puddle.")
         else: print("You take the passage without incident.")
     elif c.lower() == "b":
@@ -1202,16 +1211,21 @@ def intinv(char):
     select = input('Enter the number of your selection: ')
     choice = menu[int(select)-1][1]
     if name == 'armor':
-        drawLoot(char, 'armor', item = char.equippedArmor.ID)
+        if char.equippedArmor.ID != 'Naked':
+            drawLoot(char, 'armor', item = char.equippedArmor.ID)
         equipArmor(char, choice)
         print(menu[int(select)-1])
         toDel = menu[int(select)-1][2]
         print(f'ToDel = {toDel}')
         del char.inventory[toDel]
     elif name == 'weapon':
-        drawLoot(char, 'weapon', item = char.equippedWeapon.ID)
+        if char.equippedWeapon.name != 'Bare Handed':
+            drawLoot(char, 'weapon', item = char.equippedWeapon.ID)
         equipWeapon(char, choice)
         print(menu[int(select)-1])
         toDel = menu[int(select)-1][2]
         print(f'ToDel = {toDel}')
         del char.inventory[toDel]
+
+#if __name__ == "__main__":
+ #   start()
