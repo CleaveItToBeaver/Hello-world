@@ -201,6 +201,7 @@ def wanderingMonster(floor=1):
         if x['floor'] == floor:
             select.append(x['ID'])
         else: pass
+    #Temp - if there's no entry for that floor, just spawn a rat
     if select == []:
         select = ['Rat']
     mob = random.choice(select)
@@ -213,6 +214,7 @@ def instMob(ID):
             ID = baseHuman()
             ID.name = x["name"]
             ID.desc = x["desc"]
+            ID.SM = x['SM']
             print(ID.desc)
             ID.ST = x["ST"]
             ID.DX = x["DX"]
@@ -488,7 +490,7 @@ def attack(char, skill, target, dType="N"):
     if dmg > 4:
         target.shock = 4
     else:
-        target.shock = dmg
+        target.shock += dmg
     if target.tempHP <= (target.maxHP*-5):
         target.dead = 1
         print(f"{target.name} dies from extreme damage.")
@@ -623,7 +625,6 @@ or dual wielded weapons);
                         print("You ready your weapon.")
                     elif ready.lower() == "a":
                         intinv(PC)
-                    print("Currently does nothing. ")
                     
             else:
                 run = input("Really run away? Y/N ")
@@ -844,11 +845,18 @@ def sidePassage(PC, ex):
                 end = combatloop(PC, foe)
                 if end == 1:
                     victory(PC, 'dungeon', foe.name)
+                else: return(0)
             elif t > 2 and t < 5:
                 print("Trap!")
                 trap(PC)
-            elif t > 4 and t < 7: print("Valuable item!")
-                #Add useful items here
+            elif t > 4 and t < 7:
+                print("Valuable item!")
+                d = random.randrange(1,20)
+                if d > 15:
+                    drawLoot(PC, "armor")
+                elif d < 16 and d > 10:
+                    drawLoot(PC, "weapon")
+                else: drawLoot(PC, "treasure")
             else: print("Just a reflection from a shallow puddle.")
         else: print("You take the passage without incident.")
     elif c.lower() == "c": print("You continue forward safely.")
@@ -878,6 +886,7 @@ def door(PC):
                     end = combatloop(PC, foe)
                     if end == 1:
                         victory(PC, 'dungeon', foe.name)
+                    else: return(0)
                 c = input("The door sticks tight. [T]ry again, or [c]ontinue past?")
                 if c.lower() == "c":
                     bail = 1
@@ -897,6 +906,7 @@ def chamber(PC):
         end = combatloop(PC, foe)
         if end == 1:
             victory(PC, 'dungeon', foe.name)
+        else: return(0)
     elif contents > 14 and contents < 18:
         print("Treasure and monster!")
         #stealth check
@@ -905,6 +915,7 @@ def chamber(PC):
         if end == 1:
             victory(PC, 'dungeon', foe.name)
             drawLoot(PC, "treasure", PC.floor)
+        else: return(0)
     elif contents == 18:
         print("Treasure!")
         t = random.randrange(1, 4)
@@ -912,6 +923,7 @@ def chamber(PC):
         drawLoot(PC, "treasure", PC.floor)
     elif contents == 19:
         print("Stairs!")
+        stairs(PC)
     elif contents == 20:
         print("Tricks and traps.")
         trap(PC)
@@ -930,9 +942,17 @@ def passageTurn(PC, ex):
                 end = combatloop(PC, foe)
                 if end == 1:
                     victory(PC, 'dungeon', foe.name)
+                else: return(0)
             elif t > 2 and t < 5:
                 trap(PC)
-            elif t > 4 and t < 7: print("Valuable item!") #Draw valuable item
+            elif t > 4 and t < 7:
+                print("Valuable item!") #Draw valuable item
+                d = random.randrange(1,20)
+                if d > 15:
+                    drawLoot(PC, "armor")
+                elif d < 16 and d > 10:
+                    drawLoot(PC, "weapon")
+                else: drawLoot(PC, "treasure")
             else: print("Just a reflection from a shallow puddle.")
         else: print("You take the passage without incident.")
     elif c.lower() == "b":
@@ -1070,6 +1090,8 @@ def explore(PC):
         end = combatloop(PC, foe)
         if end == 1:
             victory(PC, 'dungeon', foe.name)
+        elif end == 0:
+            return(0)
         #Need monsters beyond floor 1
     elif ex == 20:
         print("Tricks or traps.")
@@ -1109,11 +1131,20 @@ def trap(PC):
                 
 def dungeonloop(PC):
     print(Style.RESET_ALL)
-    print(f"Lost = {PC.lost}\t Room = {PC.room}")
-    if PC.lost == 0 and PC.room == 0:
+    print(f"Lost = {PC.lost}\t Room = {PC.room}\t Floor = {PC.floor}")
+    if PC.lost == 0 and PC.room < 1:
         opt = input("Dungeon under construction. [E]xplore the dungeon! "
             "Test [l]ooting. Equip from [i]nventory. Press [r] to return.")
-        if opt.lower() == "r": return(4)
+        if opt.lower() == "r":
+            if PC.floor < 2: return(4)
+            else:
+                backtrack = roll(PC.IQ-(PC.room-1))[0]
+                if backtrack > 1:
+                    print("You successfully ascend to the next floor, and keep your bearings.")
+                    PC.room = 0
+                else:
+                    print("This isn't the way you came down... You ascend one floor, but are lost.")
+                    PC.lost = 1
         elif opt.lower() == "l":
             drawLoot(PC, "treasure")
             return(3)
@@ -1144,7 +1175,7 @@ def dungeonloop(PC):
                 backtrack = roll(PC.IQ-(PC.room-1))[0]
                 if backtrack > 1:
                     print("You make your way back.")
-                    PC.room = 0
+                    PC.room = 1
                     return(3)
                 else:
                     print("Uh oh, this doesn't look right... You're lost.")
@@ -1228,4 +1259,4 @@ def intinv(char):
         del char.inventory[toDel]
 
 #if __name__ == "__main__":
- #   start()
+    #start()
