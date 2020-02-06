@@ -12,6 +12,11 @@ lootTabA = []
 lootTabW = []
 lootTabT = []
 #Add useful treasure + master loot table, magic items
+skillL = {}
+#skillL - name, attribute, diff, level, value
+skT = []
+#skT - Name, level, value
+
 
 class armor():
     DR = 0
@@ -72,6 +77,7 @@ class baseHuman():
     dead = 0
     defend = 1
     SM = 0
+    Skills = {}
 
     def __init__(self, DX = 10, HT = 10, IQ = 10, ST = 10):
         #print("Init running")
@@ -182,6 +188,19 @@ def loadGear():
         lootTabT.append(aTup)
     return(gearL)
 
+def loadSkills():
+    skL = {}
+    with open('Skills.json') as infile:
+        skL = json.load(infile)
+    infile.close()
+    y = 0
+    for x in skL['Skills']:
+        y += 1
+        print(y)
+        aTup = (x['Name'], x['Level'], x['Value'])
+        skT.append(aTup)
+    return(skL)
+
 def loadMobs():
     mobL = {}
     with open('Mobs.txt') as infile:
@@ -223,6 +242,7 @@ def instMob(ID):
             ID.floor = x["floor"]
             equipWeapon(ID, x['weapon'])               
             equipArmor(ID, x['armor'])
+            ID.setDmg()
         else: pass
     return(ID)
 
@@ -1190,12 +1210,14 @@ def dungeonloop(PC):
 
 gearL = loadGear()
 mobL = loadMobs()
+skillL = loadSkills()
 
 test = playerClass()
 rArmor = random.choice(gearL['armor'])
 equipArmor(test, rArmor['ID'])
 rWeap = random.choice(gearL['weapons'])
 equipWeapon(test, rWeap['ID'])
+test.Skills = skillL
 
 #foe = wanderingMonster()
 
@@ -1257,6 +1279,9 @@ def intinv(char):
         toDel = menu[int(select)-1][2]
         print(f'ToDel = {toDel}')
         del char.inventory[toDel]
+    elif name == 'item':
+        print("Not implemented yet.")
+        #Adjust when usable items are added.
 
 #if __name__ == "__main__":
     #start()
