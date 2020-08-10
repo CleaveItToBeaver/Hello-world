@@ -13,7 +13,8 @@ lootTabW = []
 lootTabT = []
 #Add useful treasure + master loot table, magic items
 skillL = {}
-#skillL - name, attribute, diff, level, value
+#skillL - Skills: name, attribute, diff, level, value
+#   Costs: Difficulty (E-VH), default
 skT = []
 #skT - Name, level, value
 
@@ -78,6 +79,7 @@ class baseHuman():
     defend = 1
     SM = 0
     Skills = {}
+    skillDefault = -5
 
     def __init__(self, DX = 10, HT = 10, IQ = 10, ST = 10):
         #print("Init running")
@@ -197,7 +199,7 @@ def loadSkills():
     for x in skL['Skills']:
         y += 1
         print(y)
-        aTup = (x['Name'], x['Level'], x['Value'])
+        aTup = (x['Name'], x['Attribute'], x['Level'], x['Value'])
         skT.append(aTup)
     return(skL)
 
@@ -717,138 +719,161 @@ def victory(PC, loc, enemy='none'):
 
 def townloop(PC):
     print(Style.RESET_ALL)
-    opt = input("""Town is under construction. Pay for [h]ealing; [T]rain Stats;
-Buy [C]P;  [S]ell loot; Equip from [i]nventory; Press [r] to return. """)
+    opt = input("""Town is under construction. Pay for [h]ealing; Train s[T]ats
+or s[K]ills; Buy [C]P;  [S]ell loot; Equip from [I]nventory;
+Press [r] to return. """)
     if opt.lower() == "r": return(4)
     elif opt.lower() == 'i':
         intinv(PC)
         return(2)
     elif opt.lower() == "t":
-        stat = input("\nRaise a stat? [ST]/10CP [DX]/20CP [IQ]/20CP [HT]/10CP [B]ack ")
-        if stat == "b" or stat == "B":
-            return(2)
-        elif stat.lower() == "st":
-            if (PC.CP - 10) >= 0:
-                PC.CP -= 10
-                PC.ST += 1
-                PC.setDmg()
-                print(Fore.GREEN + f"""Your ST is now {PC.ST}! You have {PC.CP} CP remaining.\n""")
-                return(2)
-            else:
-                deficit = abs(PC.CP-10)
-                print(f"Sorry, you need {deficit} more CP to advance this stat.")
-                return(2)
-        elif stat.lower() == "dx":
-            if (PC.CP - 20) >= 0:
-                PC.CP -= 20
-                PC.DX += 1
-                print(Fore.GREEN + f"""Your DX is now {PC.DX}! You have {PC.CP} CP remaining.\n""")
-                return(2)
-            else:
-                deficit = abs(PC.CP-20)
-                print(f"Sorry, you need {deficit} more CP to advance this stat.")
-                return(2)
-        elif stat.lower() == "iq":
-            if (PC.CP - 20) >= 0:
-                PC.CP -= 20
-                PC.IQ += 1
-                print(Fore.GREEN + f"""Your IQ is now {PC.IQ}! You have {PC.CP} CP remaining.\n""")
-                return(2)
-            else:
-                deficit = abs(PC.CP-20)
-                print(f"Sorry, you need {deficit} more CP to advance this stat.")
-                return(2)
-        elif stat.lower() == "ht":
-            if (PC.CP - 10) >= 0:
-                PC.CP -= 10
-                PC.HT += 1
-                print(Fore.GREEN + f"""Your HT is now {PC.HT}! You have {PC.CP} CP remaining.\n""")
-                return(2)
-            else:
-                deficit = abs(PC.CP-10)
-                print(Fore.RED + f"Sorry, you need {deficit} more CP to advance this stat.")
-                return(2)
-        else:
-            print("Enter a valid menu option. ")
-            return(2)
+        buyStat(PC)
     elif opt.lower() == "c":
-        buy = input(f"""\nCP (character points) can be purchased for 1000 silver pieces each. You 
+        buyCP(PC)
+    elif opt.lower() == "h":
+        heals(PC)
+    elif opt.lower() == "s":
+        sellStuff(PC)
+    elif opt.lower() == "k":
+        buySkills(PC)
+
+def buyStat(PC):
+    stat = input("\nRaise a stat? [ST]/10CP [DX]/20CP [IQ]/20CP [HT]/10CP [B]ack ")
+    if stat == "b" or stat == "B":
+        return(2)
+    elif stat.lower() == "st":
+        if (PC.CP - 10) >= 0:
+            PC.CP -= 10
+            PC.ST += 1
+            PC.setDmg()
+            print(Fore.GREEN + f"""Your ST is now {PC.ST}! You have {PC.CP} CP remaining.\n""")
+            return(2)
+        else:
+            deficit = abs(PC.CP-10)
+            print(f"Sorry, you need {deficit} more CP to advance this stat.")
+            return(2)
+    elif stat.lower() == "dx":
+        if (PC.CP - 20) >= 0:
+            PC.CP -= 20
+            PC.DX += 1
+            print(Fore.GREEN + f"""Your DX is now {PC.DX}! You have {PC.CP} CP remaining.\n""")
+            return(2)
+        else:
+            deficit = abs(PC.CP-20)
+            print(f"Sorry, you need {deficit} more CP to advance this stat.")
+            return(2)
+    elif stat.lower() == "iq":
+        if (PC.CP - 20) >= 0:
+            PC.CP -= 20
+            PC.IQ += 1
+            print(Fore.GREEN + f"""Your IQ is now {PC.IQ}! You have {PC.CP} CP remaining.\n""")
+            return(2)
+        else:
+            deficit = abs(PC.CP-20)
+            print(f"Sorry, you need {deficit} more CP to advance this stat.")
+            return(2)
+    elif stat.lower() == "ht":
+        if (PC.CP - 10) >= 0:
+            PC.CP -= 10
+            PC.HT += 1
+            print(Fore.GREEN + f"""Your HT is now {PC.HT}! You have {PC.CP} CP remaining.\n""")
+            return(2)
+        else:
+            deficit = abs(PC.CP-10)
+            print(Fore.RED + f"Sorry, you need {deficit} more CP to advance this stat.")
+            return(2)
+    else:
+        print("Enter a valid menu option. ")
+        return(2)
+
+def buyCP(PC):
+    buy = input(f"""\nCP (character points) can be purchased for 1000 silver pieces each. You 
 currently have {PC.SP} silver pieces.\n Enter an amount to purchase,or go [b]ack. """)
-        if (buy.isdigit()):
-            buy = int(buy)
-            if (PC.SP - (buy*1000)) >= 0:
-                PC.SP -= (buy*1000)
-                PC.CP += buy
-                print(Fore.YELLOW + f"""You now have {PC.CP} CP! You have {PC.SP}
+    if (buy.isdigit()):
+        buy = int(buy)
+        if (PC.SP - (buy*1000)) >= 0:
+            PC.SP -= (buy*1000)
+            PC.CP += buy
+            print(Fore.YELLOW + f"""You now have {PC.CP} CP! You have {PC.SP}
 SP remaining.\n""")
+            return(2)
+        else:
+            deficit = abs(PC.SP-(buy*1000))
+            print(Fore.RED + f"You require {deficit} more silver.")
+            return(2)
+    elif buy.lower() == "b":
+        return(2)
+
+def heals(PC):
+    print("\nA local cleric performs healing spells in exchange for a generous tithe. (10SP/1HP)")
+    heal = input("Enter the number of HP to restore, [F] to heal to max, or go [b]ack. ")
+    if (heal.isdigit()):
+        heal = int(heal)
+        if (PC.maxHP - PC.tempHP) >= heal:
+            if PC.SP - (heal*10) >= 0:
+                PC.SP -= (heal*10)
+                PC.tempHP += heal
+                print(Fore.GREEN + f"Restored {heal} HP. You now have {PC.tempHP} HP remaining.")
                 return(2)
             else:
-                deficit = abs(PC.SP-(buy*1000))
-                print(Fore.RED + f"You require {deficit} more silver.")
+                deficit = abs(PC.SP - (heal*10))
+                print(Fore.RED + "You can't afford that much healing! You need {deficit} more SP.")
                 return(2)
-        elif buy.lower() == "b":
-            return(2)
-    elif opt.lower() == "h":
-        print("\nA local cleric performs healing spells in exchange for a generous tithe. (10SP/1HP)")
-        heal = input("Enter the number of HP to restore, [F] to heal to max, or go [b]ack. ")
-        if (heal.isdigit()):
-            heal = int(heal)
-            if (PC.maxHP - PC.tempHP) >= heal:
-                if PC.SP - (heal*10) >= 0:
-                    PC.SP -= (heal*10)
-                    PC.tempHP += heal
-                    print(Fore.GREEN + f"Restored {heal} HP. You now have {PC.tempHP} HP remaining.")
-                    return(2)
-                else:
-                    deficit = abs(PC.SP - (heal*10))
-                    print(Fore.RED + "You can't afford that much healing! You need {deficit} more SP.")
-                    return(2)
-            elif PC.tempHP == PC.maxHP:
-                tithe = input("""You don't need any healing, but the Church gladly accepts donations.
+        elif PC.tempHP == PC.maxHP:
+            tithe = input("""You don't need any healing, but the Church gladly accepts donations.
 Enter an amount to tithe, or go [b]ack. """)
-                if (tithe.isdigit()):
-                    tithe = int(tithe)
-                    PC.SP -= abs(tithe)
-                    print("\nThe Church thanks you for your generosity.")
-                    return(2)
-                elif tithe.lower() == "b":
-                    return(2)
-            elif (PC.maxHP - PC.tempHP) < heal:
-                heal = PC.maxHP - PC.tempHP
-                if PC.SP - (heal*10) >= 0:
-                    PC.SP -= (heal*10)
-                    PC.tempHP += heal
-                    print(Fore.GREEN + f"Restored {heal} HP. You now have {PC.tempHP} HP remaining.")
-                    return(2)
-        elif heal.lower() == "f":
-                heal = PC.maxHP - PC.tempHP
-                if PC.SP - (heal*10) >= 0:
-                    PC.SP -= (heal*10)
-                    PC.tempHP += heal
-                    print(Fore.GREEN + f"Restored {heal} HP. You now have {PC.tempHP} HP remaining.")
-                    return(2)
-    elif opt.lower() == "s":
-        ask = input("Sell vendor [t]rash?")
-        if ask.lower() == "t":
-            total = 0
-            x = 0
-            toDel = []
-            for i in PC.inventory:
-                if i[0][2] == "trash":
-                    total = (i[1] * i[0][1])
-                    PC.SP += int(total)
-                    print(f"Gained {total} SP for {i[1]}x {i[0][0]}.")
-                    
-                    toDel.append(x)
-                else:
-                    pass
-                x += 1
-            #cleanup
+            if (tithe.isdigit()):
+                tithe = int(tithe)
+                PC.SP -= abs(tithe)
+                print("\nThe Church thanks you for your generosity.")
+                return(2)
+            elif tithe.lower() == "b":
+                return(2)
+        elif (PC.maxHP - PC.tempHP) < heal:
+            heal = PC.maxHP - PC.tempHP
+            if PC.SP - (heal*10) >= 0:
+                PC.SP -= (heal*10)
+                PC.tempHP += heal
+                print(Fore.GREEN + f"Restored {heal} HP. You now have {PC.tempHP} HP remaining.")
+                return(2)
+    elif heal.lower() == "f":
+            heal = PC.maxHP - PC.tempHP
+            if PC.SP - (heal*10) >= 0:
+                PC.SP -= (heal*10)
+                PC.tempHP += heal
+                print(Fore.GREEN + f"Restored {heal} HP. You now have {PC.tempHP} HP remaining.")
+                return(2)
+
+def sellStuff(PC):
+    ask = input("Sell vendor [t]rash?")
+    if ask.lower() == "t":
+        total = 0
+        x = 0
+        toDel = []
+        for i in PC.inventory:
+            if i[0][2] == "trash":
+                total = (i[1] * i[0][1])
+                PC.SP += int(total)
+                print(f"Gained {total} SP for {i[1]}x {i[0][0]}.")
+                
+                toDel.append(x)
+            else:
+                pass
+            x += 1
+        #cleanup
+        if not toDel:
+            print("Nothing to sell.")
+        else:
             toDel.reverse()
             for i in toDel:
                 del PC.inventory[i]
                 print(i)
             print(f"You now have {PC.SP} SP.")
+    return(2)
+
+def buySkills():
+    print ("Working on it. Ain't that nice?")
+    return(2)
 
 #--------Dungeon Rooms-----------        
 def sidePassage(PC, ex):
@@ -1217,7 +1242,7 @@ rArmor = random.choice(gearL['armor'])
 equipArmor(test, rArmor['ID'])
 rWeap = random.choice(gearL['weapons'])
 equipWeapon(test, rWeap['ID'])
-test.Skills = skillL
+test.Skills = skT
 
 #foe = wanderingMonster()
 
@@ -1283,5 +1308,5 @@ def intinv(char):
         print("Not implemented yet.")
         #Adjust when usable items are added.
 
-#if __name__ == "__main__":
-    #start()
+if __name__ == "__main__":
+    start()
