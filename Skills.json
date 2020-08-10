@@ -1,3 +1,21 @@
-{"Skills":[{"Name": "Axe/Mace", "Attribute": "DX", "Difficulty": "E", "Level": 0, "Value": 0}],
+{"Skills":[
+    {"Name": "Axe/Mace", "Attribute": "DX", "Difficulty": "A", "Level": 0, "Value": 0},
+    {"Name": "Alchemy", "Attribute": "IQ", "Difficulty": "VH", "Level": 0, "Value": 0},
+    {"Name": "Animal Handling", "Attribute": "IQ", "Difficulty": "A", "Level": 0, "Value": 0},
+    {"Name": "Blowpipe", "Attribute": "DX", "Difficulty": "H", "Level": 0, "Value": 0},
+    {"Name": "Bow", "Attribute": "DX", "Difficulty": "A", "Level": 0, "Value": 0},
+    {"Name": "Brawling", "Attribute": "DX", "Difficulty": "A", "Level": 0, "Value": 0},
+    {"Name": "Broadsword", "Attribute": "DX", "Difficulty": "A", "Level": 0, "Value": 0},
+    {"Name": "Knife", "Attribute": "DX", "Difficulty": "E", "Level": 0, "Value": 0},
+    {"Name": "Polearm", "Attribute": "DX", "Difficulty": "A", "Level": 0, "Value": 0},
+    {"Name": "Rapier", "Attribute": "DX", "Difficulty": "A", "Level": 0, "Value": 0},
+    {"Name": "Spear", "Attribute": "DX", "Difficulty": "E", "Level": 0, "Value": 0},
+    {"Name": "Traps", "Attribute": "IQ", "Difficulty": "A", "Level": 0, "Value": 0},
+    {"Name": "Wrestling", "Attribute": "DX", "Difficulty": "A", "Level": 0, "Value": 0},
+],
  
-"Costs":[{"Difficulty": "E", "Default": 0}, {"Difficulty": "A", "Default": -1}, {"Difficulty": "H", "Default": -2}, {"Difficulty": "VH", "Default": -3}]}
+"Costs":[
+    {"Difficulty": "E", "Start": 0}, 
+    {"Difficulty": "A", "Start": -1}, 
+    {"Difficulty": "H", "Start": -2}, 
+    {"Difficulty": "VH", "Start": -3}]}
