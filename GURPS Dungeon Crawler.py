@@ -92,7 +92,7 @@ class baseHuman():
 
     def setDmg(self):
         stL = {}
-        with open('stTable.txt') as infile:
+        with open('stTable.json') as infile:
             stL = json.load(infile)
 
         for x in stL['dmgTable']:
@@ -203,7 +203,7 @@ def loadSkills():
 
 def loadMobs():
     mobL = {}
-    with open('Mobs.txt') as infile:
+    with open('Mobs.json') as infile:
         mobL = json.load(infile)
     infile.close()
     y = 0
