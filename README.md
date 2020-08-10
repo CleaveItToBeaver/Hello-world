@@ -33,4 +33,6 @@ Next goals on the chopping block:
 	
 	[X]*Inventory system - probably a dict[] or list referencing class instances?
 	
+	*Usable items (potions, etc)
+	
 	*Randomized arena enemy loadouts
