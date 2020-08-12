@@ -12,12 +12,9 @@ lootTabA = []
 lootTabW = []
 lootTabT = []
 #Add useful treasure + master loot table, magic items
-skillL = {}
-#skillL - Skills: name, attribute, diff, level, value
-#   Costs: Difficulty (E-VH), default
-skT = []
+skT = {}
 #skT - Name, level, value
-
+diffs = {}
 
 class armor():
     DR = 0
@@ -88,9 +85,20 @@ class baseHuman():
         self.speed = (DX + HT)/4
         self.maxHP = ST
         self.tempHP = self.maxHP
-        self.parry = 3 + int(DX/2)
+        self.Skills = skT
+        self.setESL()
+        self.updateParry()
         self.setDmg()
         self.move = int(self.speed)
+
+    def setESL(self):
+        for x in self.Skills:
+            if x['Value'] == 0:
+                x['ESL'] = getattr(self, x['Attribute']) + self.skillDefault
+            else:
+                for i in diffs:
+                    if i['Difficulty'] == x['Difficulty']:
+                        x['ESL'] = getattr(self, x['Attribute']) + x['Ranks'] + i['Start']
 
     def setDmg(self):
         stL = {}
@@ -105,6 +113,14 @@ class baseHuman():
                 self.Sw[0] = x["swDice"]
                 self.Sw[1] = x["swMod"]
         infile.close()
+
+    def updateParry(self):
+        esl = 0
+        print(f"ESL: {esl}")
+        print(f"Equipped Weapon Skill: {self.equippedWeapon.skill}")
+        esl = findESL(self, self.equippedWeapon.skill)        
+        self.parry = int(3 + (esl/2))
+        print(f"Parry: {self.parry}")
         
     @property
     def speed(self):
@@ -166,6 +182,7 @@ class playerClass(baseHuman):
     pursued = 0
     floor = 1
     room = 0
+    Skills = skT
 
 def loadGear():
     gearL = {}
@@ -191,17 +208,14 @@ def loadGear():
     return(gearL)
 
 def loadSkills():
+    skT = {}
     skL = {}
     with open('Skills.json') as infile:
         skL = json.load(infile)
     infile.close()
-    y = 0
-    for x in skL['Skills']:
-        y += 1
-        print(y)
-        aTup = (x['Name'], x['Attribute'], x['Level'], x['Value'])
-        skT.append(aTup)
-    return(skL)
+    skT = skL['Skills']
+    diffs = skL['Costs']
+    return(skT, diffs)
 
 def loadMobs():
     mobL = {}
@@ -285,6 +299,8 @@ def equipWeapon(target, ID):
             ID.handed = x["handed"]
             ID.ID = x["ID"]
             target.equippedWeapon = ID
+            esl = findESL(target, ID.skill)
+            target.parry = 3 + (esl/2)
         else: pass
 #---------Loot Draw----------------
 def lootArmor():
@@ -367,6 +383,7 @@ def massLoot():
 #---------End Debug Functions------
 
 def contest(charskill, foeskill):
+    #Returns 1 (Success) or 0 (Failure)
     t1 = roll(charskill)
     t2 = roll(foeskill)
     if t1[0] > 1 and t2[0] < 2: return(1)
@@ -451,7 +468,7 @@ def attack(char, skill, target, dType="N"):
     tempdice = getattr(char, char.equippedWeapon.dmgSrc)
     dice = []
     dice.extend(tempdice)
-    print(dice)
+    print(f"{char.equippedWeapon.dmgSrc} damage dice: {dice}")
     if dType.lower() == "s":
         if dice[0] > 2:
             dice[1] += dice[0]
@@ -602,7 +619,15 @@ def normalizeCurrency(PC):
     PC.GP = 0
     PC.PP = 0
 
+def findESL(PC, skill):
+    esl = 0
+    for x in PC.Skills:
+        if x['Name'] == skill:
+            esl = x['ESL']
+    return(esl)
+
 def combatloop(PC, enemy):
+    esl = findESL(PC, PC.equippedWeapon.skill)
     turn = 1
     while PC.dead == 0 and enemy.dead == 0:
         print(Fore.CYAN + Style.DIM + f"Turn #{turn}")
@@ -625,7 +650,7 @@ You collapse in the mud, beaten and ashamed. """)
                 attType = input("""\n[N]ormal attack, [A]ll-Out Attack (no defence),
 All-Out [D]efend, or [R]eady an item? """)
                 if attType.lower() == "n":
-                    attack(PC, PC.DX, enemy)
+                    attack(PC, esl, enemy)
                 elif attType == "a":
                     PC.defend = 0
                     aoa = input("""\n[D]etermined (+4 to hit);
@@ -633,12 +658,12 @@ Dou[b]le (2 attacks with weapon that doesn't need to be readied,
 or dual wielded weapons);
 [S]trong (+2 dmg or +1/die, whichever is better) """)
                     if aoa.lower() == "d":
-                        attack(PC, PC.DX+4, enemy)
+                        attack(PC, esl+4, enemy)
                     elif aoa.lower() == "b":
-                        attack(PC, PC.DX, enemy)
-                        attack(PC, PC.DX, enemy)
+                        attack(PC, esl, enemy)
+                        attack(PC, esl, enemy)
                     elif aoa.lower() == "s":
-                        attack(PC, PC.DX, enemy, aoa)
+                        attack(PC, esl, enemy, aoa)
                 elif attType.lower() == "d":
                     PC.defend = 2
                 elif attType.lower() == "r":
@@ -871,9 +896,40 @@ def sellStuff(PC):
             print(f"You now have {PC.SP} SP.")
     return(2)
 
-def buySkills():
-    print ("Working on it. Ain't that nice?")
-    return(2)
+def buySkills(PC):
+    print(f"You have {PC.CP} available to spend. /n")
+    menu = []
+    for i, each in enumerate(PC.Skills):
+        tup = (i, each['Name'], each['Attribute'], each['Difficulty'],
+            each['Ranks'], each['ESL'], each['CtI'])
+        menu.append(tup)
+
+    for i in menu:
+        print(f"{i[0]+1}. {i[1]}\t Stat/Diff: {i[2]}/{i[3]}\t ESL: {i[5]}\n Current point " +
+        f"value: [{i[4]}]\t Cost to improve: {i[6]}""")
+    selection = input("Enter the number of the skill you wish to improve. ")
+    if PC.CP >= menu[int(selection)-1][6]:
+        confirm = input(f"It will cost {menu[int(selection)-1][6]} CP to improve"
+        + f" {menu[int(selection)-1][1]}. Confirm? [Y/N] ")
+        if confirm.lower() == 'y':
+            PC.CP = PC.CP - menu[int(selection)-1][6]
+            if PC.Skills[int(selection)-1]['Name'] == menu[int(selection)-1][1]:
+                PC.Skills[int(selection)-1]['Ranks'] += 1
+                PC.Skills[int(selection)-1]['Value'] += menu[int(selection)-1][6]
+                if PC.Skills[int(selection)-1]['Value'] < 2: PC.Skills[int(selection)-1]['CtI'] = 1
+                elif PC.Skills[int(selection)-1]['Value'] == 2: PC.Skills[int(selection)-1]['CtI'] = 2
+                else: PC.Skills[int(selection)-1]['CtI'] = 4
+                if PC.Skills[int(selection)-1]['Value'] == 0:
+                    PC.Skills[int(selection)-1]['ESL'] = PC.DX + PC.skillDefault
+                else:
+                    for i in diffs:
+                        if i['Difficulty'] == PC.Skills[int(selection)-1]['Difficulty']:
+                            PC.Skills[int(selection)-1]['ESL'] = PC.DX + PC.Skills[int(selection)-1]['Ranks'] + i['Start']
+        PC.updateParry()
+        return(2)
+    else:
+        print("Insufficient CP.")
+        return(2)
 
 #--------Dungeon Rooms-----------        
 def sidePassage(PC, ex):
@@ -913,7 +969,7 @@ def passage(PC):
         PC.room = random.randrange(1, 11)
 
 def door(PC):
-    c = input("A locked door. [F]orce it, or [c]ontinue onward?")
+    c = input("A locked door. [F]orce it, or [c]ontinue onward? ")
     if c.lower() == "c": print("You continue forward safely.")
     elif c.lower() == "f":
         force = 0
@@ -932,7 +988,7 @@ def door(PC):
                     if end == 1:
                         victory(PC, 'dungeon', foe.name)
                     else: return(0)
-                c = input("The door sticks tight. [T]ry again, or [c]ontinue past?")
+                c = input("The door sticks tight. [T]ry again, or [c]ontinue past? ")
                 if c.lower() == "c":
                     bail = 1
                     print("You continue forward safely.")
@@ -956,11 +1012,24 @@ def chamber(PC):
         print("Treasure and monster!")
         #stealth check
         foe = wanderingMonster(PC.floor)
-        end = combatloop(PC, foe)
-        if end == 1:
-            victory(PC, 'dungeon', foe.name)
-            drawLoot(PC, "treasure", PC.floor)
-        else: return(0)
+        print(f'A {foe.name} is guarding some treasure here!')
+        c = input("[S]neak past and grab the loot, [F]ight it out, or [c]ontinue past? ")
+        if c.lower == 'c':
+            pass
+        elif c.lower == 's':
+            stealth = findESL(PC, 'Stealth')
+            check = contest(stealth, foe.IQ)
+            if check == 1:
+                drawLoot(PC, "treasure", PC.floor)
+            elif check == 0:
+                print("The {foe.name} hears your appraoch and wheels to fight!")
+                c = 'f'
+        elif c.lower == "f":
+            end = combatloop(PC, foe)
+            if end == 1:
+                victory(PC, 'dungeon', foe.name)
+                drawLoot(PC, "treasure", PC.floor)
+            else: return(0)
     elif contents == 18:
         print("Treasure!")
         t = random.randrange(1, 4)
@@ -1157,7 +1226,8 @@ def trap(PC):
         print("You gingerly step over the pressure plate, and leave the trap intact for the next unsuspecting soul.")
         return
     elif choice.lower() == 'd':
-        disarm = roll(PC.DX)[0]
+        esl = findESL(PC, 'Traps')
+        disarm = roll(esl)[0]
         if disarm > 1:
             print("You carefully dismantle the trigger mechanism and collect a few spare parts you could probably sell to a scrapper.")
             addLoot(8, darts, PC)
@@ -1235,16 +1305,15 @@ def dungeonloop(PC):
 
 gearL = loadGear()
 mobL = loadMobs()
-skillL = loadSkills()
+skT, diffs = loadSkills()
 
 test = playerClass()
 rArmor = random.choice(gearL['armor'])
 equipArmor(test, rArmor['ID'])
 rWeap = random.choice(gearL['weapons'])
 equipWeapon(test, rWeap['ID'])
-test.Skills = skT
 
-#foe = wanderingMonster()
+#foe = wanderingMonster()   
 
 #start()
 #------------Test stuff for Inventory---------------
